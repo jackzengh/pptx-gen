@@ -227,7 +227,7 @@ def table(slide, left, top, width, height, headers, rows, *, header_fill, header
 # --------------------------------------------------------------------------- #
 GREEN = RGBColor(0x2E, 0x9E, 0x7B)         # primary accent (hue 1)
 GREEN_DK = RGBColor(0x1B, 0x6B, 0x52)      # darker green: totals + on-light text (hue 2)
-GREEN_LT = RGBColor(0xBF, 0xDD, 0xD0)      # light green: greyed nav on green sidebar (hue 3)
+GREEN_LT = RGBColor(0xCF, 0xE7, 0xDD)      # light green: greyed nav on green sidebar (hue 3)
 INK = RGBColor(0x33, 0x33, 0x33)           # near-black ink (neutral)
 MUTED = RGBColor(0x59, 0x59, 0x59)         # darker muted gray — contrast >=4.5:1 on light (neutral)
 FAINT = RGBColor(0x66, 0x66, 0x66)         # source/footnote gray — readable on white (neutral)
@@ -261,7 +261,9 @@ def new_slide(bg=WHITE, *, cover=False):
     s.background.fill.solid()
     s.background.fill.fore_color.rgb = bg
     if not cover:
-        page_number(s)          # every content slide gets a monotonic page number
+        # White page number on a non-white (green/dark) full-bleed slide so it
+        # keeps >=4.5:1 contrast; muted grey on the usual light slides.
+        page_number(s, color=(WHITE if bg != WHITE else FAINT))
     return s
 
 
@@ -292,12 +294,12 @@ def source(slide, text, *, color=FAINT, y=None, left=None, width=None):
         paragraph(tf, line, SOURCE_PT, color, first=(i == 0), font="Arial", space_after_pt=1)
 
 
-def page_number(slide):
+def page_number(slide, color=FAINT):
     """A monotonic page number, bottom-right, on every content slide (not cover)."""
     _page_counter["n"] += 1
     _, tf = textbox(slide, int((SW - 0.55) * EMU), SRC_TOP, int(0.4 * EMU), int(0.3 * EMU),
                     name=f"pagenum_{_page_counter['n']}")
-    paragraph(tf, str(_page_counter["n"]), SOURCE_PT, FAINT, first=True,
+    paragraph(tf, str(_page_counter["n"]), SOURCE_PT, color, first=True,
               align=PP_ALIGN.RIGHT, font="Arial")
 
 
@@ -555,7 +557,8 @@ for i, (txt, cy) in enumerate(zip(callouts, co_ys)):
     paragraph(cf, txt, BODY_PT, INK, first=True, font="Arial")
 source(s, ["Source: BCG analysis.",
            "¹Includes dealership employment and impact on local communities.",
-           "²Multiplier effects include after-sales services and community GDP impact driven by employee respending."])
+           "²Multiplier effects include after-sales services and community GDP impact driven by employee respending."],
+       left=int(4.6 * EMU), width=int(7.6 * EMU))  # right of the green sidebar (grey reads on white)
 
 # 4. SUMMARY MFG + USAGE — two icon columns
 s = new_slide(WHITE)
@@ -781,7 +784,7 @@ for i, (fr, im, sz, lbl, hero) in enumerate(bub):
 image_field(s, int(9.2 * EMU), ct, int(3.7 * EMU), int(4.3 * EMU), name="image_pat", fill=SLATE)
 _, apf = textbox(s, int(9.3 * EMU), ct + int(0.1 * EMU), int(3.4 * EMU), int(1.0 * EMU), name="annot_pat")
 paragraph(apf, "Ford is a leader in both patent Competitive Impact and Freshness", BODY_PT, WHITE, bold=True, first=True, font="Arial")
-source(s, ["Sources: LexisNexis PatentSight; BCG Center for Growth & Innovation Analytics; image: Ford."])
+source(s, ["Sources: LexisNexis PatentSight; BCG Center for Growth & Innovation Analytics; image: Ford."], left=int(4.2 * EMU), width=int(8.0 * EMU))
 
 # 17. PATENTS-INDUSTRIES — sidebar + 2x4 icon grid
 s = new_slide(WHITE)
@@ -817,13 +820,14 @@ for idx, (hdr, desc) in enumerate(items):
     paragraph(hf, hdr, BODY_PT, INK, bold=True, first=True, font="Arial")
     _, df = textbox(s, cx, cy + int(1.25 * EMU), cell_w, int(1.4 * EMU), name=f"inddesc_{idx}")
     paragraph(df, desc, SUBTITLE_PT, MUTED, first=True, font="Arial")
-source(s, ["Sources: LexisNexis PatentSight; BCG Center for Growth & Innovation Analytics."])
+source(s, ["Sources: LexisNexis PatentSight; BCG Center for Growth & Innovation Analytics."],
+       left=int(4.2 * EMU), width=int(8.0 * EMU))  # right of the green sidebar (grey on white)
 
 # 18. SECTION — Usage
 section_divider("Usage impact", "The F-Series drives the daily work of millions of Americans")
 
 # 19. USAGE-EQUATION — stat hero + sidebar
-s = new_slide(GREEN)
+s = new_slide(GREEN_DK)
 rectangle(s, int(9.0 * EMU), 0, int((SW - 9.0) * EMU), int(SH * EMU), name="background_sidebar", fill=LIGHT)
 ct = title(s, "F-Series trucks are used by and support up to 13 million Americans in their daily work",
            accent=WHITE, ink=WHITE, width_in=8.2)
