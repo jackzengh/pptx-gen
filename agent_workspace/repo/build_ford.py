@@ -274,7 +274,9 @@ def source(slide, text, *, color=FAINT, y=None, left=None, width=None):
     # Source band stops short of the page-number slot at the right edge. FIXED
     # top (footer vertical-rhythm) with height growing downward by line count;
     # the bottom stays within the margin for up to ~4 lines.
-    w = width if width is not None else int((SW - MARGIN_IN - 0.7) * EMU)
+    # Reserve ~1.0in at the right for the page-number slot so the source band
+    # never reaches it (page number now sits further in for the 0.3in margin).
+    w = width if width is not None else int((SW - MARGIN_IN - 1.05) * EMU)
     h = int((0.1 + 0.125 * len(text)) * EMU)
     # Bottom-anchor at FOOTER_BOTTOM so a multi-line source grows UP, never down
     # into the 0.3in bottom margin band.
