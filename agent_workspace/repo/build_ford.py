@@ -297,7 +297,8 @@ def source(slide, text, *, color=FAINT, y=None, left=None, width=None):
 def page_number(slide, color=FAINT):
     """A monotonic page number, bottom-right, on every content slide (not cover)."""
     _page_counter["n"] += 1
-    _, tf = textbox(slide, int((SW - 0.55) * EMU), SRC_TOP, int(0.4 * EMU), int(0.3 * EMU),
+    # Right edge at SW-0.45 = 12.88in keeps the box clear of the 0.3in margin band.
+    _, tf = textbox(slide, int((SW - 0.85) * EMU), SRC_TOP, int(0.4 * EMU), int(0.3 * EMU),
                     name=f"pagenum_{_page_counter['n']}")
     paragraph(tf, str(_page_counter["n"]), SOURCE_PT, color, first=True,
               align=PP_ALIGN.RIGHT, font="Arial")

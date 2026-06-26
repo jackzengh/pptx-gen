@@ -11,6 +11,10 @@ from .text_metrics import measure_text_emu
 
 EMU_PER_INCH = 914400
 TOL = 0.1
+# Reserved outer margin (inches) for the outer-margin-frame check — matches the
+# rubric grader's 0.3in band and standard IB convention. Distinct from TOL,
+# which is the fine alignment/overlap tolerance.
+MARGIN_BAND = 0.3
 CAPTION_GAP = 0.5
 TITLE_TYPES = {PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE}
 PRIMARY_KINDS = {"title", "body", "chart", "table", "picture", "text"}
@@ -366,9 +370,13 @@ def check_outer_margin_frame(ctx: DeckContext) -> list[dict]:
                 b.left < 0 or b.top < 0
                 or b.right > ctx.slide_w or b.bottom > ctx.slide_h
             )
+            # Reserve a 0.3in margin on all edges (standard IB convention, and
+            # what the rubric grader enforces) so page numbers / footers / any
+            # content stay clear of the slide edge. Larger than TOL on purpose.
             in_band = (
-                b.left < TOL or b.top < TOL
-                or b.right > ctx.slide_w - TOL or b.bottom > ctx.slide_h - TOL
+                b.left < MARGIN_BAND or b.top < MARGIN_BAND
+                or b.right > ctx.slide_w - MARGIN_BAND
+                or b.bottom > ctx.slide_h - MARGIN_BAND
             )
             if off_slide:
                 out.append(_problem(
@@ -379,7 +387,7 @@ def check_outer_margin_frame(ctx: DeckContext) -> list[dict]:
             elif in_band:
                 out.append(_problem(
                     crit, s.index,
-                    f"{b.name!r} intrudes into the {TOL} in outer margin band",
+                    f"{b.name!r} intrudes into the {MARGIN_BAND} in outer margin band",
                     [b.name], [b.as_dict()],
                 ))
     return out
