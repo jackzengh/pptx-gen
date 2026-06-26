@@ -61,5 +61,3 @@ Distilled from McKinsey/BCG/Bain slide standards and presentation-design guides 
 **Source line on every data slide.** A small muted source/footnote at the bottom (e.g. "Source: FY2021 10-K"). Standard in consulting decks; we already require captions — keep the source line too.
 
 **Charts clarify, not decorate.** Bar for comparison, line for trend over time, pie only for parts-of-a-whole with few slices. No chart junk: subtle gridlines, muted axis labels, no 3-D, no default "Chart Title", data labels only where they aid reading.
-
-Sources: [Deckary — Consulting Slide Standards](https://deckary.com/blog/consulting-slide-standards), [Deckary — BCG Presentation Style](https://deckary.com/blog/bcg-presentation-style), [Deckary — PowerPoint Design Guide](https://deckary.com/blog/pillar-powerpoint-design-guide), [Slidor — 15 design rules](https://www.slidor.agency/blog/15-regles-illustrees-pour-ameliorer-le-design-de-vos-presentations-powerpoint), [Flashdocs — 10 design principles](https://www.flashdocs.com/post/10-design-principles-every-slide-creator-should-know).

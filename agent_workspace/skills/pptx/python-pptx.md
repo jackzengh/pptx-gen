@@ -247,7 +247,7 @@ def title(slide, text, *, accent, ink, width_in=11.0, font="Georgia",
     tb, tf = textbox(slide, left, top, w, h_emu, name=name)
     paragraph(tf, text, TITLE_PT, ink, bold=True, first=True, font=font, space_after_pt=0)
     # accent connector directly beneath the title
-    conn_y = top + h_emu + int(0.06 * EMU)
+    conn_y = top + h_emu + int(0.10 * EMU)
     connector(slide, left, conn_y, int(1.6 * EMU), accent, name=f"{name}_rule", weight_pt=2.5)
     content_top = conn_y + int(0.12 * EMU)
     if subtitle:
@@ -275,6 +275,16 @@ def chart(slide, left, top, width, height, categories, series, *, palette,
     gf.name = name
     ch = gf.chart
     ch.has_title = False                       # <- never leave "Chart Title"
+    if kind == "pie":
+        # A pie has a single series; color each POINT (slice) from the palette
+        # and show a labeled legend (otherwise all slices are one color).
+        ch.has_legend = True
+        ch.legend.position = XL_LEGEND_POSITION.BOTTOM
+        ch.legend.include_in_layout = False
+        for i, pt in enumerate(ch.plots[0].series[0].points):
+            pt.format.fill.solid()
+            pt.format.fill.fore_color.rgb = palette[i % len(palette)]
+        return gf
     ch.has_legend = bool(legend_bottom) and len(series) > 1
     if ch.has_legend:
         ch.legend.position = XL_LEGEND_POSITION.BOTTOM

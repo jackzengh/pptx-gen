@@ -104,7 +104,12 @@ def _kind_of(shape, title_shape) -> str:
             return "title"
         if ph_type == PP_PLACEHOLDER.BODY:
             return "body"
-    if getattr(shape, "has_text_frame", False) and shape.has_text_frame:
+    # Only a shape carrying actual text counts as a "text" primary block. An
+    # empty text frame (a decorative rectangle, a motif chip, a fill-only card)
+    # is "other": still checked for overlap/margins, but excluded from the
+    # left-margin / row / gutter alignment checks meant for content blocks.
+    if (getattr(shape, "has_text_frame", False) and shape.has_text_frame
+            and shape.text_frame.text.strip()):
         return "text"
     return "other"
 
@@ -394,11 +399,18 @@ def check_consistent_gutters(ctx: DeckContext) -> list[dict]:
                     [b.name for b in ordered],
                     [b.as_dict() for b in ordered],
                 ))
-        # Vertical gutters within columns of 3+ genuine stacked peers.
+        # Vertical gutters within columns of 3+ genuine stacked peers. A title
+        # and a footer/source line are distinct roles, not list peers, so a
+        # title -> body -> footer stack is NOT expected to have even gaps; drop
+        # titles and bottom-band (footer/source) boxes before measuring.
         for col in _columns(s.boxes):
-            if len(col) < 3:
+            peers = [
+                b for b in col
+                if b.kind != "title" and b.bottom < ctx.slide_h - 0.6
+            ]
+            if len(peers) < 3:
                 continue
-            ordered = sorted(col, key=lambda b: b.top)
+            ordered = sorted(peers, key=lambda b: b.top)
             gaps = [
                 ordered[i + 1].top - ordered[i].bottom
                 for i in range(len(ordered) - 1)

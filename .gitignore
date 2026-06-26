@@ -19,3 +19,6 @@ agent_workspace/out-*/
 agent_workspace/final/
 # LibreOffice lock files
 ~$*
+# Generated decks / build scripts written into the mounted repo at runtime
+agent_workspace/repo/*.pptx
+agent_workspace/repo/build_deck.py
