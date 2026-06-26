@@ -224,9 +224,13 @@ from pptx.chart.data import CategoryChartData
 
 EMU = 914400
 # Fixed layout grid — SAME on every content slide (check_pptx enforces this).
-MARGIN_IN = 0.6
-TITLE_TOP_IN = 0.5
-TITLE_PT = 30           # keep <= 32 so 2 lines fit ~1.4in; >34 risks 3-line overflow
+# Matches the constants in design.md ("Vertical rhythm"). Tighter margins +
+# clear (not cramped) title-to-connector gap.
+MARGIN_IN = 0.45
+TITLE_TOP_IN = 0.45
+TITLE_PT = 28           # 24-30; sized for its real wrapped height
+TITLE_GAP_IN = 0.14     # gap from title's rendered bottom to the connector
+CONN_TO_BODY_IN = 0.18  # gap from connector down to content
 
 
 def title(slide, text, *, accent, ink, width_in=11.0, font="Georgia",
@@ -246,10 +250,10 @@ def title(slide, text, *, accent, ink, width_in=11.0, font="Georgia",
     h_emu = max(h_emu, int(0.7 * EMU))
     tb, tf = textbox(slide, left, top, w, h_emu, name=name)
     paragraph(tf, text, TITLE_PT, ink, bold=True, first=True, font=font, space_after_pt=0)
-    # accent connector directly beneath the title
-    conn_y = top + h_emu + int(0.10 * EMU)
+    # accent connector below the title's rendered bottom — a clear gap, not cramped
+    conn_y = top + h_emu + int(TITLE_GAP_IN * EMU)
     connector(slide, left, conn_y, int(1.6 * EMU), accent, name=f"{name}_rule", weight_pt=2.5)
-    content_top = conn_y + int(0.12 * EMU)
+    content_top = conn_y + int(CONN_TO_BODY_IN * EMU)
     if subtitle:
         st_y = content_top
         _, stf = textbox(slide, left, st_y, w, int(0.3 * EMU), name=f"caption_{name}")
