@@ -2,6 +2,83 @@
 
 Concrete, non-negotiable rules that `check_pptx` cannot fully verify but a reader sees instantly. They exist because real generated decks broke each one. The target is a BCG/McKinsey-grade deck: **dense, deliberate, edge-to-edge** — not an AI deck with a chart floating in a sea of empty space.
 
+**This is the single source for design decisions — read it before you build.** SKILL.md points here on purpose; palettes, typography, layout patterns, spacing constants, and the grader conventions all live in this file.
+
+---
+
+## Design ideas — start here
+
+**Don't create boring slides.** Plain bullets on a white background won't impress anyone.
+
+### Before starting
+
+- **Pick a bold, content-informed palette.** If swapping your colors into a totally different deck would still "work," they aren't specific enough.
+- **Dominance over equality.** One color dominates (60–70% of visual weight), with 1–2 supporting tones and one sharp accent. Never give all colors equal weight.
+- **Dark/light contrast.** Dark backgrounds for title + conclusion, light for content ("sandwich"). Or commit to dark throughout for a premium feel.
+- **Commit to a visual motif.** Pick ONE distinctive element and repeat it on every slide — rounded image frames, icons in colored circles, a thick single-side band.
+
+### Color palettes
+
+Don't default to generic blue. Use these as inspiration:
+
+| Theme              | Primary  | Secondary | Accent   |
+| ------------------ | -------- | --------- | -------- |
+| Midnight Executive | `1E2761` | `CADCFC`  | `FFFFFF` |
+| Forest & Moss      | `2C5F2D` | `97BC62`  | `F5F5F5` |
+| Coral Energy       | `F96167` | `F9E795`  | `2F3C7E` |
+| Warm Terracotta    | `B85042` | `E7E8D1`  | `A7BEAE` |
+| Ocean Gradient     | `065A82` | `1C7293`  | `21295C` |
+| Charcoal Minimal   | `36454F` | `F2F2F2`  | `212121` |
+| Teal Trust         | `028090` | `00A896`  | `02C39A` |
+| Berry & Cream      | `6D2E46` | `A26769`  | `ECE2D0` |
+| Sage Calm          | `84B59F` | `69A297`  | `50808E` |
+| Cherry Bold        | `990011` | `FCF6F5`  | `2F3C7E` |
+
+> In python-pptx, write these as `RGBColor(0x1E, 0x27, 0x61)` — never `"#1E2761"`.
+
+### Layout & data display
+
+**Every slide needs a visual element** — image, chart, icon, or shape. Text-only slides are forgettable.
+
+- Two-column (text left, visual right) · icon + text rows · 2×2 / 2×3 grids · half-bleed image with overlay.
+- Large stat callouts (60–72pt numbers, small labels) · before/after columns · numbered process flows.
+
+### Visual polish
+
+- **Icons in small colored circles** next to section headers.
+- **Italic accent text** for key stats or taglines.
+
+### Typography
+
+Choose an interesting font pairing — don't default to Arial.
+
+| Element        | Size          |
+| -------------- | ------------- |
+| Slide title    | 36–44pt bold  |
+| Section header | 20–24pt bold  |
+| Body text      | 14–16pt       |
+| Captions       | 10–12pt muted |
+
+Pairings: Georgia/Calibri · Arial Black/Arial · Calibri/Calibri Light · Cambria/Calibri · Trebuchet MS/Calibri · Impact/Arial · Palatino/Garamond · Consolas/Calibri.
+
+### Spacing
+
+- 0.5" minimum margins (the outer 0.1" is a hard fail — keep well clear).
+- 0.3–0.5" between content blocks. Pick one gap and use it consistently.
+- Leave breathing room — don't fill every inch.
+
+### Avoid (common mistakes)
+
+- **Don't repeat the same layout** — vary columns, cards, and callouts.
+- **Don't center body text** — left-align paragraphs and lists; center only titles.
+- **Don't skimp on size contrast** — titles 36pt+ vs 14–16pt body.
+- **Don't default to blue** — pick colors that reflect the topic.
+- **Don't mix spacing randomly** — choose 0.3" or 0.5" gaps and stick to it.
+- **Don't create text-only slides.**
+- **Don't forget text-box padding** — when aligning text to a shape edge, zero the frame margins (`tf.margin_left = Pt(0)`, etc.).
+- **Don't use low-contrast elements** — icons AND text need strong contrast against the background; avoid light text on light or dark text on dark (see the WCAG ≥4.5:1 rule below).
+- **NEVER use accent lines under titles** — a hallmark of AI-generated slides. Use whitespace or background color instead.
+
 ---
 
 ## Grader conventions (these score the deck — follow every one)

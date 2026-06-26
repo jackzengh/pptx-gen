@@ -1,17 +1,17 @@
-# Task: Generate the Ford F-Series economic-impact PowerPoint
+# Task: Generate the Take-Two financial overview PowerPoint
 
 Build a polished `.pptx` slide deck from the content spec and validate its layout until it passes.
 
 ## Inputs (all paths relative to the workspace root)
 
-- `repo/spec.md` — the content spec. It defines **~21 slides** for the BCG "Economic Impact of Ford and the F-Series" deck — a dense, varied BCG-style deck: color sidebars, annotated waterfall/bridge charts, comparison bars with multiplier rows, a 2x4 icon grid, a stat-equation hero, and section dividers with nav. Each slide has a full-sentence action title. Read it fully before writing any code.
+- `repo/spec.md` — the content spec. It defines **15 slides** for a Take-Two Interactive financial overview — stat-card KPI rows, line/column/pie charts, side-by-side tables, two-column bullet layouts, a section divider, a pull-quote, and a closing slide. Each slide has a full-sentence action title. Read it fully before writing any code.
 - `skills/pptx/SKILL.md` — the **PPTX skill**. Read it and the files it links (`design.md`, `python-pptx.md`, `naming.md`) before building. **Read `design.md` first** — it has the mandatory design rules AND a "Grader conventions" section (action-title verb lexicon, "Source:" not "Sources:", page numbers, one-size-per-level, <=6 hues, contrast >=4.5:1 with darker panels, fixed title-top, 0.3in margins). A separate rubric grader scores these; satisfy ALL of them. Follow it exactly.
 - `repo/harness/` + `repo/main.py` — the `check_pptx` layout validator. Run it on your output.
 
 ## What to produce
 
-- A file `repo/ttwo_overview.pptx` built with **python-pptx** (16:9), one slide per `##` section in `spec.md`, in order. No photos exist — render each image region as a named color field with an "Image: Ford." caption.
-- Follow the skill's design guidance: the BCG green palette (a primary green + a darker variant for panels so white text keeps ≥4.5:1 contrast); color-sidebar cover/section slides, light content slides; the fixed top-right chip motif; every slide has a visual element; left-aligned body text; one title size deck-wide (~26pt) per the grader's one-size-per-level rule.
+- A file `repo/ttwo_overview.pptx` built with **python-pptx** (16:9), one slide per `##` section in `spec.md`, in order.
+- Follow the skill's design guidance: a bold, content-informed palette (a primary color + a darker variant for panels so white text keeps ≥4.5:1 contrast); dark cover/section/closing slides, light content slides; a repeated motif; every slide has a visual element; left-aligned body text; one title size deck-wide per the grader's one-size-per-level rule.
 
 ## Hard rules from the skill (these are what `check_pptx` enforces)
 
@@ -51,6 +51,6 @@ You also have a `validate_deck` tool available that calls `check_pptx` directly 
 
 ## Definition of done
 
-- `repo/ttwo_overview.pptx` exists and contains ~21 slides matching the spec content.
+- `repo/ttwo_overview.pptx` exists and contains 15 slides matching the spec content.
 - `check_pptx` returns `ok: true` (42/42).
 - Summarize: the palette/motif you chose, how many fix-and-revalidate iterations it took, and the final score.

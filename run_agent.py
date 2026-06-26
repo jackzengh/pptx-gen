@@ -24,8 +24,24 @@ from agents.sandbox.capabilities import (
     Skills,
 )
 from agents.sandbox.capabilities.compaction import Compaction
+from agents.sandbox.capabilities.filesystem import Filesystem
 from agents.sandbox.capabilities.shell import Shell
 from agents.sandbox.entries import LocalDir
+
+
+class _NoVisionFilesystem(Filesystem):
+    """Filesystem capability with the image-viewing tool removed.
+
+    The stock Filesystem exposes both `apply_patch` and `view_image`. This agent
+    must NEVER have vision — it builds and validates decks from text + geometry
+    only — so we drop `view_image` from the exposed toolset entirely. (The
+    shell-only path doesn't include Filesystem at all; this guards the
+    apply_patch path so no code route can ever grant image input.)
+    """
+
+    def tools(self):
+        return [t for t in super().tools()
+                if getattr(t, "name", "") != "view_image"]
 from agents.sandbox.sandboxes.unix_local import UnixLocalSandboxClient
 
 # Import the validator directly so the function tool can call it from the host.
@@ -83,13 +99,16 @@ def build_agent(model: str, *, use_apply_patch: bool = True) -> SandboxAgent[Non
     # apply_patch tool"). For those, drop Filesystem and have the agent write/
     # edit files with the Shell capability's `exec_command` (bash) instead.
     if use_apply_patch:
-        base_caps = Capabilities.default()  # [Filesystem, Shell, Compaction]
+        # _NoVisionFilesystem == Filesystem minus view_image: apply_patch + a
+        # shell, but NO image-viewing tool. (Default would be [Filesystem(=patch
+        # + view_image), Shell, Compaction].)
+        base_caps = [_NoVisionFilesystem(), Shell(), Compaction()]
         edit_hint = (
             "Paths for apply_patch and the shell are relative to the sandbox "
             "workspace root."
         )
     else:
-        base_caps = [Shell(), Compaction()]  # no apply_patch
+        base_caps = [Shell(), Compaction()]  # no apply_patch, no vision
         edit_hint = (
             "You do NOT have an apply_patch tool. Create and edit files only with "
             "the shell (`exec_command`) — e.g. write the whole script with a `cat "
