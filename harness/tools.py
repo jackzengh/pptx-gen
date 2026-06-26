@@ -590,6 +590,10 @@ def _estimated_text_height(b: Box) -> float | None:
     """
     if not b.paras:
         return None
+    # An entirely-empty text frame (e.g. an oval/rectangle marker that happens to
+    # carry a blank text frame) renders no text — don't estimate a phantom line.
+    if all(not (txt or "").strip() for txt, *_ in b.paras):
+        return None
     lI, rI, tI, bI = b.text_insets
     usable_w_in = b.width - lI - rI
     if usable_w_in <= 0:
@@ -757,10 +761,23 @@ def _block_left_edges(boxes: list[Box]) -> list[float]:
     # Each peer row contributes only its leftmost edge.
     for row in rows:
         lefts.append(min(b.left for b in row))
-    # Standalone primary elements (not part of any peer row) contribute their own.
-    for b in boxes:
-        if b.kind in PRIMARY_KINDS and id(b) not in row_members:
-            lefts.append(b.left)
+    # Also group standalone primaries that share a top into a "soft row": a
+    # chart beside a table (different widths, so not strict peers) is still one
+    # visual row and contributes only its leftmost edge — not one per element.
+    standalone = [
+        b for b in boxes
+        if b.kind in PRIMARY_KINDS and id(b) not in row_members
+    ]
+    soft_rows: list[list[Box]] = []
+    for b in sorted(standalone, key=lambda x: x.top):
+        for r in soft_rows:
+            if abs(b.top - r[0].top) <= TOL:
+                r.append(b)
+                break
+        else:
+            soft_rows.append([b])
+    for r in soft_rows:
+        lefts.append(min(b.left for b in r))
     return lefts
 
 

@@ -666,14 +666,23 @@ vline(s, px, py, ph, FAINT, name="plot_am_yaxis", weight_pt=1.0)
 # data points: (x sold 0-600, y index 50-80, label, hero?)
 def amxy(sold, idx):
     return px + int(pw * (sold / 600)), py + int(ph * (1 - (idx - 50) / 30))
-pts = [(560, 78, "F-150", True), (110, 78, "Canyon", False), (120, 78, "Colorado", False),
-       (250, 71, "Tacoma", False), (110, 70, "Tundra", False), (440, 68, "Silverado", False),
-       (430, 66, "Ram", False), (75, 61, "Ranger", False), (75, 52, "Frontier", False)]
-for i, (sx, sy, lbl, hero) in enumerate(pts):
+# (sx, sy, label, hero, label_dx_in, label_dy_in) — dx/dy stagger labels for
+# clustered points (Canyon/Colorado/Ridgeline sit on top of each other at ~78).
+pts = [(560, 78, "F-150", True, 0.12, -0.12),
+       (30, 77, "Ridgeline", False, 0.12, -0.30),
+       (110, 78, "Canyon", False, 0.12, -0.12),
+       (120, 78, "Colorado", False, 0.12, 0.14),
+       (250, 71, "Tacoma", False, 0.12, -0.12),
+       (110, 70, "Tundra", False, 0.12, -0.12),
+       (440, 68, "Silverado", False, 0.12, -0.12),
+       (430, 66, "Ram", False, 0.12, 0.10),
+       (75, 61, "Ranger", False, 0.12, -0.12),
+       (75, 52, "Frontier", False, 0.12, -0.12)]
+for i, (sx, sy, lbl, hero, ldx, ldy) in enumerate(pts):
     cx, cy = amxy(sx, sy)
     dsz = int(0.22 * EMU) if hero else int(0.16 * EMU)
     oval(s, cx - dsz // 2, cy - dsz // 2, dsz, dsz, name=f"pt_am_{i}", fill=GREEN if hero else GREY_BAR)
-    _, lf = textbox(s, cx + int(0.12 * EMU), cy - int(0.12 * EMU), int(1.2 * EMU), int(0.24 * EMU), name=f"ptlbl_am_{i}")
+    _, lf = textbox(s, cx + int(ldx * EMU), cy + int(ldy * EMU), int(1.3 * EMU), int(0.34 * EMU), name=f"ptlbl_am_{i}")
     paragraph(lf, lbl, 9, GREEN_DK if hero else MUTED, bold=hero, first=True, font="Arial")
 image_field(s, int(9.2 * EMU), ct, int(3.7 * EMU), int(4.3 * EMU), name="image_am", fill=SLATE)
 _, anf = textbox(s, int(9.3 * EMU), ct + int(0.1 * EMU), int(3.4 * EMU), int(1.2 * EMU), name="annot_am")
