@@ -20,19 +20,53 @@ TITLE_TYPES = {PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE}
 PRIMARY_KINDS = {"title", "body", "chart", "table", "picture", "text"}
 
 # --- Shape roles by name prefix --------------------------------------------
-# Full-bleed / panel decorations are MEANT to touch the slide edge and to carry
-# text/labels on top of them (a colored sidebar, an image field). They are
-# exempt from the outer-margin check and never count as an overlap victim. This
-# lets BCG-style full-bleed/sidebar layouts pass while normal content shapes
-# stay strictly checked. Opt in by naming: background_*, *_sidebar, image_*, bg.
-_DECOR_PREFIXES = ("background", "image", "bg", "sidebar", "panel", "field")
-# Plot regions whose internal markers/labels (and on-chart annotations) legitimately
-# overlap each other and the plot — a scatter/bubble chart is one visual unit.
-_PLOT_PREFIXES = ("plot",)
-_PLOT_CHILD_PREFIXES = ("pt", "ptlbl", "bub", "bublbl", "annot", "marker", "dot")
-# Overlay labels that intentionally sit on/near a panel, image, tile, or chart:
-# image captions, contents-tile badges/captions, on-chart annotations.
-_OVERLAY_PREFIXES = ("caption", "tile", "tilenum", "annot", "bracket", "tick")
+# FOUR semantic roles, each mapping to exactly ONE exemption behavior. Name a
+# shape `<role>_<descriptor>` (e.g. background_sidebar, chartpart_wf_total,
+# overlay_image_credit, meta_pagenum_3) to opt it out of the matching checks.
+# Ordinary content (title/body/card_*/chart_*/table_*) stays fully checked.
+#
+#   background_*  full-bleed panels & image fields — meant to touch the edge and
+#                 host text on top. Exempt from outer-margin + being an overlap
+#                 victim.
+#   chartpart_*   any piece of a HAND-DRAWN chart (waterfall bars, comparison
+#                 bars, scatter points & labels, brackets, multiplier row, axis
+#                 labels). The chart is one unit: its parts may vary in
+#                 width/gutter and overlap each other. Exempt from grid + their
+#                 mutual overlaps.
+#   overlay_*     a label that sits ON something (a caption on an image, a tile
+#                 badge, an on-chart annotation). Exempt from overlap.
+#   meta_*        non-grid chrome (eyebrow, footer, source, page number, nav,
+#                 rules, legend, icon-row sub-headers). Exempt from grid checks.
+#
+# The bare descriptors below are legacy aliases kept so older decks still pass;
+# new decks should use the four role prefixes above.
+_DECOR_PREFIXES = (
+    "background", "image", "bg", "sidebar", "panel", "field",  # legacy
+)
+# Chart-internal pieces (container + children, drawn by hand).
+_PLOT_PREFIXES = ("chartpart", "plot")  # container region
+_PLOT_CHILD_PREFIXES = (
+    "chartpart",
+    "pt", "ptlbl", "bub", "bublbl", "annot", "marker", "dot",  # legacy
+)
+_MANUAL_CHART_PREFIXES = (
+    "chartpart",
+    "wf", "cmp", "bar", "step", "waterfall", "bridge",         # legacy
+    "mult", "multlabel", "catlabel", "axis", "grpbar",
+)
+# Labels placed on a panel / image / tile / chart.
+_OVERLAY_PREFIXES = (
+    "overlay",
+    "caption", "tile", "tilenum", "annot", "bracket", "tick",  # legacy
+)
+# Non-grid chrome.
+_META_PREFIXES = (
+    "meta",
+    "eyebrow", "title_rule", "rule", "nav", "logo", "footer", "source",  # legacy
+    "pagenum", "pageno", "divider", "vrule", "legend", "icon", "indhdr",
+    "inddesc", "iconlbl", "head", "subhead", "label", "iconlabel",
+    "callout", "operand", "opcap",
+)
 
 
 def _has_role(name: str, prefixes: tuple) -> bool:
@@ -50,26 +84,12 @@ def _contained_in(child: "Box", parent: "Box", pad: float = TOL) -> bool:
             and child.right <= parent.right + pad and child.bottom <= parent.bottom + pad)
 
 
-# Shapes excluded from the main-content GRID checks (left-margin / row-width /
-# gutter / column alignment): decorative panels, content that lives INSIDE a
-# panel (e.g. sidebar text), eyebrow labels, overlay labels, and plot internals.
-# These have their own intentional geometry and shouldn't force the main column
-# off-grid. The grid checks still apply strictly to ordinary content blocks.
-# Manual chart-component prefixes: a hand-drawn waterfall/bridge (wf_*), a
-# comparison-bar chart (cmp_*), or a manual bar/step set is ONE visual unit whose
-# internal bars legitimately vary in width/left/gutter and may carry value labels
-# on them — like a native chart. Treated as plot-internal for grid + overlap.
-_MANUAL_CHART_PREFIXES = ("wf", "cmp", "bar", "step", "waterfall", "bridge",
-                          "mult", "multlabel", "catlabel", "axis", "grpbar")
+# Everything that is NOT a main-content grid block (excluded from left-margin /
+# row-width / gutter / column-alignment checks): all four roles plus content
+# that lives inside a background panel (handled separately in _grid_boxes).
 _NON_GRID_PREFIXES = (
-    _DECOR_PREFIXES + _OVERLAY_PREFIXES + _PLOT_PREFIXES + _PLOT_CHILD_PREFIXES
-    + _MANUAL_CHART_PREFIXES
-    + ("eyebrow", "title_rule", "rule", "nav", "logo", "footer", "source",
-       "pagenum", "pageno", "divider", "vrule", "legend", "icon", "indhdr",
-       "inddesc", "iconlbl",
-       # column sub-headers / labels that sit beside an icon (not main-grid
-       # blocks — they intentionally indent past the icon or sub-label a column)
-       "head", "subhead", "label", "iconlabel", "callout", "operand", "opcap")
+    _DECOR_PREFIXES + _OVERLAY_PREFIXES + _PLOT_PREFIXES
+    + _PLOT_CHILD_PREFIXES + _MANUAL_CHART_PREFIXES + _META_PREFIXES
 )
 
 
