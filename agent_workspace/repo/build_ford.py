@@ -354,10 +354,11 @@ def waterfall(slide, x, y, w, h, steps, *, total_label, brackets=None, descripti
         ly = axis_y - bar_h(cum2)
         connector(slide, centers[i], ly, (centers[i + 1] - centers[i]), FAINT,
                   name=f"{name}_dot_{i}", weight_pt=0.75, dash="dash")
-    # y-axis label
+    # y-axis label — a short horizontal unit caption just above the plot's top
+    # left (rotated axis titles render unreliably; the unit is what matters).
     if y_axis:
-        _, yf = textbox(slide, x - int(0.28 * EMU), plot_top, int(0.24 * EMU), plot_h, name=f"{name}_yaxis")
-        yf.word_wrap = True
+        _, yf = textbox(slide, x, plot_top - int(0.26 * EMU), int(5.0 * EMU), int(0.22 * EMU), name=f"{name}_yaxis")
+        yf.word_wrap = False
         paragraph(yf, y_axis, 9, MUTED, first=True, font="Arial")
     # grouping brackets above
     if brackets:
