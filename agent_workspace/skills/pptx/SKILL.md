@@ -1,18 +1,18 @@
 ---
 name: pptx
-description: 'Use this skill any time a .pptx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from a .pptx; editing, modifying, or updating existing presentations; combining or splitting slide files; working with templates, layouts, speaker notes, or comments. Trigger whenever the user mentions "deck," "slides," "presentation," or references a .pptx filename, regardless of what they plan to do with the content afterward. This skill builds decks with python-pptx and validates layout with check_pptx.'
+description: "Use this skill any time a .pptx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from a .pptx; editing, modifying, or updating existing presentations; combining or splitting slide files; working with templates, layouts, speaker notes, or comments. Trigger whenever the user mentions \"deck,\" \"slides,\" \"presentation,\" or references a .pptx filename, regardless of what they plan to do with the content afterward. This skill builds decks with python-pptx and validates layout with check_pptx."
 ---
 
 # PPTX Skill (python-pptx + check_pptx)
 
 ## Quick Reference
 
-| Task                  | Guide                                                            |
-| --------------------- | ---------------------------------------------------------------- |
-| Read / extract text   | `python -m markitdown deck.pptx`                                 |
-| Create from scratch   | Read [python-pptx.md](python-pptx.md)                            |
-| Name shapes correctly | Read [naming.md](naming.md)                                      |
-| Validate layout       | `python main.py deck.pptx` (or `from harness import check_pptx`) |
+| Task | Guide |
+|------|-------|
+| Read / extract text | `python -m markitdown deck.pptx` |
+| Create from scratch | Read [python-pptx.md](python-pptx.md) |
+| Name shapes correctly | Read [naming.md](naming.md) |
+| Validate layout | `python main.py deck.pptx` (or `from harness import check_pptx`) |
 
 This skill builds with the **python-pptx** library and validates with **`check_pptx`** — the geometric layout validator in this project at `harness/tools.py`.
 
@@ -52,17 +52,17 @@ Use this to extract text, check order, and find leftover placeholder content.
 
 Don't default to generic blue. Use these as inspiration:
 
-| Theme              | Primary  | Secondary | Accent   |
-| ------------------ | -------- | --------- | -------- |
-| Midnight Executive | `1E2761` | `CADCFC`  | `FFFFFF` |
-| Forest & Moss      | `2C5F2D` | `97BC62`  | `F5F5F5` |
-| Coral Energy       | `F96167` | `F9E795`  | `2F3C7E` |
-| Warm Terracotta    | `B85042` | `E7E8D1`  | `A7BEAE` |
-| Ocean Gradient     | `065A82` | `1C7293`  | `21295C` |
-| Charcoal Minimal   | `36454F` | `F2F2F2`  | `212121` |
-| Teal Trust         | `028090` | `00A896`  | `02C39A` |
-| Berry & Cream      | `6D2E46` | `A26769`  | `ECE2D0` |
-| Cherry Bold        | `990011` | `FCF6F5`  | `2F3C7E` |
+| Theme | Primary | Secondary | Accent |
+|-------|---------|-----------|--------|
+| Midnight Executive | `1E2761` | `CADCFC` | `FFFFFF` |
+| Forest & Moss | `2C5F2D` | `97BC62` | `F5F5F5` |
+| Coral Energy | `F96167` | `F9E795` | `2F3C7E` |
+| Warm Terracotta | `B85042` | `E7E8D1` | `A7BEAE` |
+| Ocean Gradient | `065A82` | `1C7293` | `21295C` |
+| Charcoal Minimal | `36454F` | `F2F2F2` | `212121` |
+| Teal Trust | `028090` | `00A896` | `02C39A` |
+| Berry & Cream | `6D2E46` | `A26769` | `ECE2D0` |
+| Cherry Bold | `990011` | `FCF6F5` | `2F3C7E` |
 
 > In python-pptx, write these as `RGBColor(0x1E, 0x27, 0x61)` — never `"#1E2761"`.
 
@@ -77,12 +77,12 @@ Don't default to generic blue. Use these as inspiration:
 
 Choose an interesting font pairing — don't default to Arial.
 
-| Element        | Size          |
-| -------------- | ------------- |
-| Slide title    | 36–44pt bold  |
-| Section header | 20–24pt bold  |
-| Body text      | 14–16pt       |
-| Captions       | 10–12pt muted |
+| Element | Size |
+|---------|------|
+| Slide title | 36–44pt bold |
+| Section header | 20–24pt bold |
+| Body text | 14–16pt |
+| Captions | 10–12pt muted |
 
 Pairings: Georgia/Calibri · Arial Black/Arial · Cambria/Calibri · Trebuchet MS/Calibri · Palatino/Garamond.
 
@@ -115,7 +115,7 @@ Set `tf.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT` on **every** text frame (ru
 
 **But be clear about the limit — this is the single most important thing to understand about `check_pptx`:**
 
-`check_pptx` reads only **stored** geometry — the `left/top/width/height` written into the file (`shape.left`, etc.). Setting `auto_size` writes an autofit _flag_ (`<a:spAutoFit/>`) into the XML; it does **not** rewrite the stored width/height. The box only physically grows when a renderer (PowerPoint/LibreOffice) opens and reflows it — and that grown size is never written back to the stored geometry (verified: even a LibreOffice round-trip leaves the stored height unchanged).
+`check_pptx` reads only **stored** geometry — the `left/top/width/height` written into the file (`shape.left`, etc.). Setting `auto_size` writes an autofit *flag* (`<a:spAutoFit/>`) into the XML; it does **not** rewrite the stored width/height. The box only physically grows when a renderer (PowerPoint/LibreOffice) opens and reflows it — and that grown size is never written back to the stored geometry (verified: even a LibreOffice round-trip leaves the stored height unchanged).
 
 > **Therefore `check_pptx` cannot detect text overflowing inside a box — full stop.** Its docstring says exactly this ("cannot detect text overflowing inside a box; python-pptx does not reflow text"). Do not assume `auto_size` makes overflow show up in the report. It does not.
 
@@ -141,7 +141,7 @@ The report is:
   "ok": false,
   "summary": { "score": 34, "max_score": 42, "fail_count": 2, "by_criterion": {...} },
   "problems": [
-    { "criterion": "...", "slide": 2,
+    { "criterion": "...", "slide": 2, "severity": "fail",
       "message": "'card_revenue' and 'card_cost' overlap by 0.31 in^2",
       "shapes": ["card_revenue", "card_cost"], "boxes_in": [ {...}, {...} ] }
   ],
@@ -157,15 +157,15 @@ Single tolerance throughout: **`TOL = 0.1in`**. Two coordinates closer than that
 
 Criterion ids below are shortened; in the JSON each is prefixed with `layout-and-alignment-` (e.g. `layout-and-alignment-no-overlap-or-collision`).
 
-| Criterion (weight)            | Fails when                                                                     | Fix                                                                                            |
-| ----------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| `outer-margin-frame` (6)      | a shape is off-slide or within 0.1in of any edge                               | move it inward; keep ~0.5in clear                                                              |
-| `no-overlap-or-collision` (8) | any two shapes' boxes intersect                                                | separate them; don't stack content on filled panels (use `<p:bg>` for full-bleed color)        |
-| `left-margin-consistency` (8) | a slide uses >2 left edges, or ≥2 slides deviate from the deck's dominant left | align primary elements to one shared left edge across the deck                                 |
-| `edge-and-grid-alignment` (6) | peer boxes in a row have unequal widths or non-aligned tops                    | give row peers identical width and top                                                         |
-| `consistent-gutters` (5)      | gaps in a row/column of 3+ vary                                                | make the gaps equal                                                                            |
-| `element-boxing` (6)          | a chart/table has no caption within 0.1in above it                             | add a caption textbox whose bottom is within 0.1in of the chart/table top, overlapping it in x |
-| `vertical-rhythm` (3)         | the title-top-y or footer-top-y varies across slides                           | put the title (and footer) at the same y on every slide                                        |
+| Criterion (weight) | Fails when | Fix |
+|---|---|---|
+| `outer-margin-frame` (6) | a shape is off-slide or within 0.1in of any edge | move it inward; keep ~0.5in clear |
+| `no-overlap-or-collision` (8) | any two shapes' boxes intersect | separate them; don't stack content on filled panels (use `<p:bg>` for full-bleed color) |
+| `left-margin-consistency` (8) | a slide uses >2 left edges, or ≥2 slides deviate from the deck's dominant left | align primary elements to one shared left edge across the deck |
+| `edge-and-grid-alignment` (6) | peer boxes in a row have unequal widths or non-aligned tops | give row peers identical width and top |
+| `consistent-gutters` (5) | gaps in a row/column of 3+ vary | make the gaps equal |
+| `element-boxing` (6) | a chart/table has no caption within 0.1in above it | add a caption textbox whose bottom is within 0.1in of the chart/table top, overlapping it in x |
+| `vertical-rhythm` (3) | the title-top-y or footer-top-y varies across slides | put the title (and footer) at the same y on every slide |
 
 ### Known blind spots
 
@@ -173,7 +173,7 @@ Criterion ids below are shortened; in the JSON each is prefixed with `layout-and
 
 - **In-box text overflow** — text spilling past the bottom/edge of its box. `auto_size` does not change this (see above). **This is the main thing you must check by eye.**
 - **The true slide background** — full-bleed color set with `slide.background.fill` lives in `<p:bg>`, is not a shape, and is never walked. (Good: a full-bleed background can't trip overlap/margin checks.)
-- **Decorative `kind="other"` shapes** — a filled rectangle with no text frame is classified `other`. It is **skipped** by alignment/left-margin/gutter checks but **still counted** by overlap and outer-margin. So a background band can collide or bleed off the edge and _will_ be flagged, but won't be forced to align to the grid.
+- **Decorative `kind="other"` shapes** — a filled rectangle with no text frame is classified `other`. It is **skipped** by alignment/left-margin/gutter checks but **still counted** by overlap and outer-margin. So a background band can collide or bleed off the edge and *will* be flagged, but won't be forced to align to the grid.
 - **Color, contrast, and font choices** — geometry says nothing about these.
 
 Because text overflow is a real blind spot, **always do a visual render** as a second gate — render to images and inspect them (yourself or with a subagent) for overflow, clipping, contrast, and color:

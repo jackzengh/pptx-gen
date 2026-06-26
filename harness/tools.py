@@ -7,6 +7,8 @@ from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE, PP_PLACEHOLDER
 from pptx.oxml.ns import qn
 
+from .text_metrics import measure_text_emu
+
 EMU_PER_INCH = 914400
 TOL = 0.1
 CAPTION_GAP = 0.5
@@ -150,10 +152,20 @@ def _text_metrics(shape):
     tf = shape.text_frame
     for p in tf.paragraphs:
         size = None
+        bold = italic = False
+        name = None
         for run in p.runs:
             if run.font.size is not None:
                 size = run.font.size.pt
-        paras.append((len(p.text), size))
+            if run.font.bold:
+                bold = True
+            if run.font.italic:
+                italic = True
+            if run.font.name:
+                name = run.font.name
+        # (text, font_size_pt|None, bold, italic, font_name|None) — text and
+        # style are needed for real-font wrap measurement (see text_metrics).
+        paras.append((p.text, size, bold, italic, name))
     bodyPr = tf._txBody.find(qn("a:bodyPr"))
     if bodyPr is not None:
         def inset(attr, default):
@@ -430,34 +442,40 @@ def check_element_boxing(ctx: DeckContext) -> list[dict]:
 def _estimated_text_height(b: Box) -> float | None:
     """Estimate how tall b's text renders, in inches, accounting for wrapping.
 
-    Word-wrap model: each paragraph holds ~floor(usable_width / avg_char_width)
-    characters per line, so it occupies ceil(chars / chars_per_line) lines (>=1).
-    Total height = sum of line counts * (font_size * LINE_SPACING) + top/bottom
-    insets. Returns None when the box carries no text or has no usable width.
+    Measures with real font metrics (see text_metrics.measure_text_emu): the
+    bundled Liberation faces are metric-compatible with the common Office/web
+    fonts, so greedy word-wrap against the actual glyph advances yields the same
+    line counts PowerPoint produces — far more accurate than an avg-char-width
+    guess. A conservative WRAP_FILL_FACTOR biases near-full lines to wrap, so a
+    blind model's text is flagged rather than silently overflowing.
 
     This is the one defect python-pptx geometry alone cannot see: a box whose
     declared height is fine but whose text reflows past it (and, per
-    check_text_overflow, into the shape below). It is an ESTIMATE — calibrated to
-    match rendered output on real decks, but a heuristic, not a renderer.
+    check_text_overflow, into the shape below). Returns None when the box carries
+    no text or has no usable width.
     """
     if not b.paras:
         return None
     lI, rI, tI, bI = b.text_insets
-    usable_w = b.width - lI - rI
-    if usable_w <= 0:
+    usable_w_in = b.width - lI - rI
+    if usable_w_in <= 0:
         return None
     default_pt = DEFAULT_PT.get(b.kind, 14.0)
+
     total = tI + bI
-    for chars, size in b.paras:
+    box_w_emu = int(usable_w_in * EMU_PER_INCH)
+    for text, size, bold, italic, name in b.paras:
         pt = size if size is not None else default_pt
-        line_h = pt * LINE_SPACING / PT_PER_INCH
-        if chars == 0:
-            total += line_h          # blank paragraph still takes one line
-            continue
-        char_w = pt * CHAR_WIDTH_EM / PT_PER_INCH
-        chars_per_line = max(1, int(usable_w / char_w))
-        from math import ceil
-        total += ceil(chars / chars_per_line) * line_h
+        _, h_emu = measure_text_emu(
+            text or "",
+            box_w_emu,
+            pt,
+            LINE_SPACING,
+            font_family=name or "Arial",
+            bold=bool(bold),
+            italic=bool(italic),
+        )
+        total += h_emu / EMU_PER_INCH
     return total
 
 

@@ -5,7 +5,7 @@ Build a polished `.pptx` slide deck from the content spec and validate its layou
 ## Inputs (all paths relative to the workspace root)
 
 - `repo/spec.md` — the content spec. It defines **14 slides** for a Take-Two Interactive financial overview, each with a takeaway-sentence title and, per slide, some mix of: a chart, one or two tables, four "hero" stat cards, and a right-side bullet column. Read it fully before writing any code.
-- `skills/pptx/SKILL.md` — the **PPTX skill**. Read it and the files it links (`python-pptx.md`, `naming.md`) before building. Follow it exactly.
+- `skills/pptx/SKILL.md` — the **PPTX skill**. Read it and the files it links (`design.md`, `python-pptx.md`, `naming.md`) before building. **Read `design.md` first** — it has the mandatory design rules. Follow it exactly.
 - `repo/harness/` + `repo/main.py` — the `check_pptx` layout validator. Run it on your output.
 
 ## What to produce
@@ -15,7 +15,14 @@ Build a polished `.pptx` slide deck from the content spec and validate its layou
 
 ## Hard rules from the skill (these are what `check_pptx` enforces)
 
-**Build through the reusable helpers** in `skills/pptx/python-pptx.md` ("Reusable helpers" section) — copy `textbox`, `paragraph`, `rectangle`, `connector`, `style_run`, and `_apply_bullet` into your `build_deck.py` and create every element through them. This guarantees the rules below for free: `textbox()` always sets `auto_size = SHAPE_TO_FIT_TEXT` and zero margins, and `paragraph(..., bullet=True, level=n)` produces real bullets via `p.level` + `<a:buChar>` with a hanging indent. Do NOT hand-roll `add_textbox`/`add_paragraph` calls that skip these.
+**Build through the reusable helpers** in `skills/pptx/python-pptx.md` ("Reusable helpers" and "Higher-level helpers" sections) — copy `textbox`, `paragraph`, `rectangle`, `connector`, `style_run`, `_apply_bullet`, **and the higher-level `title`, `chart`, `table`** into your `build_deck.py` and create every element through them. This guarantees the rules below for free:
+- `textbox()` sets `auto_size = SHAPE_TO_FIT_TEXT` + zero margins.
+- `paragraph(..., bullet=True, level=n)` makes real `p.level` bullets.
+- **`title(slide, action_title, ...)`** sizes the title box for its real wrap (no overflow), draws the accent connector beneath it, and returns the EMU y where content starts — use that return value to position the chart/table/columns. NEVER hardcode a 0.7in title height.
+- **`chart(...)`** turns OFF the default "Chart Title" and colors series from the palette. NEVER leave a chart showing "Chart Title".
+- **`table(...)`** uses readable fonts (header ≥12pt, body ≥11pt) and real row heights.
+
+`title()` imports `from harness.text_metrics import measure_text_emu` — that module is in `repo/harness/`, so run your build script from inside `repo/` (`cd repo`). Do NOT hand-roll `add_textbox`/`add_paragraph`/`add_chart` calls that skip these helpers.
 
 1. **Name every shape** with a meaningful `shape.name` (e.g. `title`, `card_net_revenue`, `chart_revenue_trend`, `caption_chart_revenue`, `background_band`). See `skills/pptx/naming.md`.
 2. **Every text frame:** `tf.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT` (the `textbox()` helper does this).
@@ -28,13 +35,15 @@ Build a polished `.pptx` slide deck from the content spec and validate its layou
 This workspace is a local sandbox on a machine that has `uv` and a project virtualenv. Use it to run python:
 
 ```bash
-# from the workspace root
+# from the workspace root — run from INSIDE repo/ so `import harness` resolves.
+# Pillow is required: the validator's text-overflow check and the title() helper
+# measure text with real fonts via PIL.
 cd repo
-uv run --no-project --with python-pptx python build_deck.py     # build (write this script)
-uv run --no-project --with python-pptx python main.py ttwo_overview.pptx   # validate
+uv run --no-project --with python-pptx --with Pillow python build_deck.py     # build (write this script)
+uv run --no-project --with python-pptx --with Pillow python main.py ttwo_overview.pptx   # validate
 ```
 
-If `uv` is unavailable, fall back to `python3 -m pip install --user python-pptx` then plain `python3`.
+If `uv` is unavailable, fall back to `python3 -m pip install --user python-pptx Pillow` then plain `python3`.
 
 `main.py ttwo_overview.pptx` prints a JSON report. **`"ok": true` with `score == max_score` (42/42) means success.** If `ok` is false, read each problem's `criterion`, `slide`, `shapes`, and `boxes_in`, fix exactly those named shapes in `build_deck.py`, rebuild, and re-validate. Repeat until `ok: true`.
 

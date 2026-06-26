@@ -216,6 +216,102 @@ def connector(slide, left, top, width, color, *, name: str, weight_pt=1.5):
     line.line.color.rgb = color
     line.line.width = Pt(weight_pt)
     return line
+
+
+# --- Higher-level helpers (use these for titles, charts, tables) ------------
+from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION
+from pptx.chart.data import CategoryChartData
+
+EMU = 914400
+# Fixed layout grid — SAME on every content slide (check_pptx enforces this).
+MARGIN_IN = 0.6
+TITLE_TOP_IN = 0.5
+TITLE_PT = 30           # keep <= 32 so 2 lines fit ~1.4in; >34 risks 3-line overflow
+
+
+def title(slide, text, *, accent, ink, width_in=11.0, font="Georgia",
+          subtitle=None, muted=None, name="title"):
+    """Action-title block: title sized for its real wrap + accent connector beneath.
+
+    Sizes the title box tall enough for how the text actually wraps (via the same
+    measurement check_pptx uses), draws a thin accent connector under it, and —
+    if given — a subtitle below the connector. Returns the y (EMU) where slide
+    content should begin, so callers never guess the title's bottom.
+    """
+    from harness.text_metrics import measure_text_emu  # real-font wrap height
+    left = int(MARGIN_IN * EMU)
+    top = int(TITLE_TOP_IN * EMU)
+    w = int(width_in * EMU)
+    _, h_emu = measure_text_emu(text, w, TITLE_PT, 1.15, font_family=font, bold=True)
+    h_emu = max(h_emu, int(0.7 * EMU))
+    tb, tf = textbox(slide, left, top, w, h_emu, name=name)
+    paragraph(tf, text, TITLE_PT, ink, bold=True, first=True, font=font, space_after_pt=0)
+    # accent connector directly beneath the title
+    conn_y = top + h_emu + int(0.06 * EMU)
+    connector(slide, left, conn_y, int(1.6 * EMU), accent, name=f"{name}_rule", weight_pt=2.5)
+    content_top = conn_y + int(0.12 * EMU)
+    if subtitle:
+        st_y = content_top
+        _, stf = textbox(slide, left, st_y, w, int(0.3 * EMU), name=f"caption_{name}")
+        paragraph(stf, subtitle, 11, muted or ink, first=True, font="Arial")
+        content_top = st_y + int(0.34 * EMU)
+    return content_top   # EMU y where the chart/table/columns start
+
+
+def chart(slide, left, top, width, height, categories, series, *, palette,
+          name, kind="column", legend_bottom=True):
+    """Add a chart with the default 'Chart Title' turned OFF and palette colors.
+
+    `series` is [(label, [values...]), ...]. The slide's subtitle (from title())
+    is the caption; the chart carries no title of its own.
+    """
+    data = CategoryChartData()
+    data.categories = categories
+    for label, vals in series:
+        data.add_series(label, vals)
+    xl = {"column": XL_CHART_TYPE.COLUMN_CLUSTERED, "bar": XL_CHART_TYPE.BAR_CLUSTERED,
+          "line": XL_CHART_TYPE.LINE_MARKERS, "pie": XL_CHART_TYPE.PIE}[kind]
+    gf = slide.shapes.add_chart(xl, Emu(left), Emu(top), Emu(width), Emu(height), data)
+    gf.name = name
+    ch = gf.chart
+    ch.has_title = False                       # <- never leave "Chart Title"
+    ch.has_legend = bool(legend_bottom) and len(series) > 1
+    if ch.has_legend:
+        ch.legend.position = XL_LEGEND_POSITION.BOTTOM
+        ch.legend.include_in_layout = False
+    for i, plot_series in enumerate(ch.plots[0].series):
+        plot_series.format.fill.solid()
+        plot_series.format.fill.fore_color.rgb = palette[i % len(palette)]
+    return gf
+
+
+def table(slide, left, top, width, height, headers, rows, *, header_fill, header_text,
+          ink, name, col_widths_in=None, header_pt=12, body_pt=11, row_h_in=0.4):
+    """Readable table: header >=12pt bold on fill, body >=11pt, real row heights."""
+    gf = slide.shapes.add_table(len(rows) + 1, len(headers), Emu(left), Emu(top),
+                                Emu(width), Emu(height))
+    gf.name = name
+    t = gf.table
+    for j, htext in enumerate(headers):
+        c = t.cell(0, j)
+        c.fill.solid(); c.fill.fore_color.rgb = header_fill
+        c.text = str(htext)
+        p = c.text_frame.paragraphs[0]
+        p.runs[0].font.size = Pt(header_pt); p.runs[0].font.bold = True
+        p.runs[0].font.color.rgb = header_text
+    for i, row in enumerate(rows, start=1):
+        for j, val in enumerate(row):
+            c = t.cell(i, j)
+            c.text = str(val)
+            r = c.text_frame.paragraphs[0].runs[0]
+            r.font.size = Pt(body_pt); r.font.color.rgb = ink
+    t.rows[0].height = Emu(int(row_h_in * EMU))
+    for i in range(1, len(rows) + 1):
+        t.rows[i].height = Emu(int(row_h_in * EMU))
+    if col_widths_in:
+        for j, w_in in enumerate(col_widths_in):
+            t.columns[j].width = Emu(int(w_in * EMU))
+    return gf
 ```
 
 Usage — a bulleted list with sub-points (note `level=` drives both the glyph and the indent):

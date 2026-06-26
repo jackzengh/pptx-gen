@@ -5,12 +5,27 @@ from itertools import combinations
 
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE, PP_PLACEHOLDER
+from pptx.oxml.ns import qn
+
+from .text_metrics import measure_text_emu
 
 EMU_PER_INCH = 914400
 TOL = 0.1
 CAPTION_GAP = 0.5
 TITLE_TYPES = {PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE}
 PRIMARY_KINDS = {"title", "body", "chart", "table", "picture", "text"}
+
+# --- Text-overflow estimation constants -----------------------------------
+# A proportional glyph's average advance width is ~0.5-0.6 em. Titles here use
+# bold/serif faces that run wider, so 0.58 em is the calibrated value that makes
+# the line-count estimate match what PowerPoint actually renders (validated
+# against rendered slides). LINE_SPACING is the multiple of font size each line
+# occupies vertically (single-spaced text renders at ~1.2x its point size).
+CHAR_WIDTH_EM = 0.58
+LINE_SPACING = 1.2
+PT_PER_INCH = 72.0
+# Fallback point sizes when a run leaves its size unset (inherited from theme).
+DEFAULT_PT = {"title": 36.0, "body": 14.0, "text": 14.0}
 
 
 def emu_to_in(value: int) -> float:
@@ -34,6 +49,12 @@ class Box:
     width: float
     height: float
     text: str = ""
+    # Per-paragraph (char_count, font_size_pt) for the text frame, plus the four
+    # internal text insets (inches). Populated only for shapes that carry text;
+    # used by check_text_overflow to estimate how tall the text renders. None
+    # font sizes are filled with a slide/kind default at estimation time.
+    paras: list = field(default_factory=list)
+    text_insets: tuple = (0.1, 0.1, 0.05, 0.05)  # (left, right, top, bottom)
 
     @property
     def right(self) -> float:
@@ -116,6 +137,47 @@ def _group_transform(group):
     return to_parent
 
 
+def _text_metrics(shape):
+    """Per-paragraph (char_count, font_size_pt) and the text-frame insets (in).
+
+    Returns ([], default_insets) for shapes without a text frame. ``font_size_pt``
+    is None when the run inherits its size from the theme; the overflow estimator
+    substitutes a kind-based default for those. Insets default to PowerPoint's
+    standard 0.1 in left/right and 0.05 in top/bottom when not set on the box.
+    """
+    paras = []
+    insets = (0.1, 0.1, 0.05, 0.05)
+    if not (getattr(shape, "has_text_frame", False) and shape.has_text_frame):
+        return paras, insets
+    tf = shape.text_frame
+    for p in tf.paragraphs:
+        size = None
+        bold = italic = False
+        name = None
+        for run in p.runs:
+            if run.font.size is not None:
+                size = run.font.size.pt
+            if run.font.bold:
+                bold = True
+            if run.font.italic:
+                italic = True
+            if run.font.name:
+                name = run.font.name
+        # (text, font_size_pt|None, bold, italic, font_name|None) — text and
+        # style are needed for real-font wrap measurement (see text_metrics).
+        paras.append((p.text, size, bold, italic, name))
+    bodyPr = tf._txBody.find(qn("a:bodyPr"))
+    if bodyPr is not None:
+        def inset(attr, default):
+            v = bodyPr.get(attr)
+            return (int(v) / EMU_PER_INCH) if v is not None else default
+        insets = (
+            inset("lIns", 0.1), inset("rIns", 0.1),
+            inset("tIns", 0.05), inset("bIns", 0.05),
+        )
+    return paras, insets
+
+
 def _walk(shape, title_shape, transforms, out: list[Box], notes: list[str]):
     """Recursively collect leaf shapes, applying group transforms.
 
@@ -141,6 +203,7 @@ def _walk(shape, title_shape, transforms, out: list[Box], notes: list[str]):
     for to_parent in reversed(transforms):
         left, top, width, height = to_parent(left, top, width, height)
 
+    paras, insets = _text_metrics(shape)
     out.append(
         Box(
             name=shape.name or "shape",
@@ -154,6 +217,8 @@ def _walk(shape, title_shape, transforms, out: list[Box], notes: list[str]):
                 if getattr(shape, "has_text_frame", False) and shape.has_text_frame
                 else ""
             ),
+            paras=paras,
+            text_insets=insets,
         )
     )
 
@@ -330,7 +395,7 @@ def check_consistent_gutters(ctx: DeckContext) -> list[dict]:
                     [b.as_dict() for b in ordered],
                 ))
         # Vertical gutters within columns of 3+ genuine stacked peers.
-        for col in _peer_columns(s.boxes):
+        for col in _columns(s.boxes):
             if len(col) < 3:
                 continue
             ordered = sorted(col, key=lambda b: b.top)
@@ -374,7 +439,91 @@ def check_element_boxing(ctx: DeckContext) -> list[dict]:
     return out
 
 
-def check_vertical_rhythm(ctx: DeckContext) -> list[dict]:
+def _estimated_text_height(b: Box) -> float | None:
+    """Estimate how tall b's text renders, in inches, accounting for wrapping.
+
+    Measures with real font metrics (see text_metrics.measure_text_emu): the
+    bundled Liberation faces are metric-compatible with the common Office/web
+    fonts, so greedy word-wrap against the actual glyph advances yields the same
+    line counts PowerPoint produces — far more accurate than an avg-char-width
+    guess. A conservative WRAP_FILL_FACTOR biases near-full lines to wrap, so a
+    blind model's text is flagged rather than silently overflowing.
+
+    This is the one defect python-pptx geometry alone cannot see: a box whose
+    declared height is fine but whose text reflows past it (and, per
+    check_text_overflow, into the shape below). Returns None when the box carries
+    no text or has no usable width.
+    """
+    if not b.paras:
+        return None
+    lI, rI, tI, bI = b.text_insets
+    usable_w_in = b.width - lI - rI
+    if usable_w_in <= 0:
+        return None
+    default_pt = DEFAULT_PT.get(b.kind, 14.0)
+
+    total = tI + bI
+    box_w_emu = int(usable_w_in * EMU_PER_INCH)
+    for text, size, bold, italic, name in b.paras:
+        pt = size if size is not None else default_pt
+        _, h_emu = measure_text_emu(
+            text or "",
+            box_w_emu,
+            pt,
+            LINE_SPACING,
+            font_family=name or "Arial",
+            bold=bool(bold),
+            italic=bool(italic),
+        )
+        total += h_emu / EMU_PER_INCH
+    return total
+
+
+def check_text_overflow(ctx: DeckContext) -> list[dict]:
+    """Flag text that reflows past its box AND collides with the shape below it.
+
+    python-pptx exposes box geometry but never reflows text, so a title sized for
+    one line that actually wraps to three reads as 'fine' geometrically while
+    visibly crashing into the content beneath it. We estimate the rendered text
+    height (see _estimated_text_height); if the text bottom clears the box bottom
+    by more than TOL we then check whether that overspill region intersects any
+    other shape lower on the slide. Reporting only collisions (not every box that
+    is a hair too short) keeps this matched to the defect a reader actually sees.
+    """
+    crit = "typography-text-fits-its-box"
+    out = []
+    for s in ctx.slides:
+        for b in s.boxes:
+            est = _estimated_text_height(b)
+            if est is None:
+                continue
+            text_bottom = b.top + est
+            if text_bottom <= b.bottom + TOL:
+                continue  # text fits inside its own box
+            # Overspill exists: does it land on a shape below?
+            for other in s.boxes:
+                if other is b:
+                    continue
+                # horizontal overlap with the text box
+                if min(b.right, other.right) - max(b.left, other.left) <= 0:
+                    continue
+                # vertical overlap of the overspill band with the other shape
+                overlap = (min(text_bottom, other.bottom)
+                           - max(b.bottom, other.top))
+                if overlap > TOL:
+                    out.append(_problem(
+                        crit, s.index,
+                        f"{b.name!r} text overflows its box (≈{round(est, 2)} in "
+                        f"tall vs {round(b.height, 2)} in) and collides with "
+                        f"{other.name!r} below",
+                        [b.name, other.name],
+                        [b.as_dict(), other.as_dict()],
+                    ))
+                    break
+    return out
+
+
+def check_y_offset_variation(ctx: DeckContext) -> list[dict]:
     crit = "layout-and-alignment-vertical-rhythm"
     out = []
     title_tops = {}
@@ -390,8 +539,8 @@ def check_vertical_rhythm(ctx: DeckContext) -> list[dict]:
         if footers:
             footer_tops[s.index] = max(footers, key=lambda b: b.top).top
 
-    out += _rhythm_violation(crit, "title", title_tops)
-    out += _rhythm_violation(crit, "footer/page-number", footer_tops)
+        out += y_offset_variation(crit, "title", title_tops)
+    out += y_offset_variation(crit, "footer/page-number", footer_tops)
     return out
 
 
@@ -436,7 +585,7 @@ def _rows(boxes: list[Box]) -> list[list[Box]]:
     return [r for r in rows if len(r) >= 2]
 
 
-def _peer_columns(boxes: list[Box]) -> list[list[Box]]:
+def _columns(boxes: list[Box]) -> list[list[Box]]:
     """Group boxes into peer columns.
 
     A peer column is 2+ boxes that share a left (within TOL) AND have similar
@@ -474,7 +623,7 @@ def _block_left_edges(boxes: list[Box]) -> list[float]:
     return lefts
 
 
-def _rhythm_violation(crit, label, tops: dict[int, float]) -> list[dict]:
+def y_offset_variation(crit, label, tops: dict[int, float]) -> list[dict]:
     if len(tops) < 2:
         return []
     values = list(tops.values())
@@ -499,8 +648,10 @@ def check_pptx(path: str) -> dict:
     criterion, the 1-based slide number, the offending shapes, and their boxes
     (in inches), so the caller knows exactly what to move.
 
-    NOTE: cannot detect text overflowing inside a box (python-pptx does not
-    reflow text); only geometric problems are caught.
+    NOTE: text overflow is ESTIMATED (python-pptx does not reflow text), via a
+    calibrated wrap heuristic — check_text_overflow flags only overflow that
+    collides with the shape below. Treat overflow findings as high-confidence but
+    not pixel-exact; all other checks are exact geometry.
     """
     prs = Presentation(path)
     slides = [collect_shapes(s, i) for i, s in enumerate(prs.slides)]
@@ -517,7 +668,8 @@ def check_pptx(path: str) -> dict:
     problems += check_edge_and_grid_alignment(ctx)
     problems += check_consistent_gutters(ctx)
     problems += check_element_boxing(ctx)
-    problems += check_vertical_rhythm(ctx)
+    problems += check_text_overflow(ctx)
+    problems += check_y_offset_variation(ctx)
 
     notes = [
         {"slide": s.index, "notes": s.notes}
