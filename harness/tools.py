@@ -15,6 +15,73 @@ CAPTION_GAP = 0.5
 TITLE_TYPES = {PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE}
 PRIMARY_KINDS = {"title", "body", "chart", "table", "picture", "text"}
 
+# --- Shape roles by name prefix --------------------------------------------
+# Full-bleed / panel decorations are MEANT to touch the slide edge and to carry
+# text/labels on top of them (a colored sidebar, an image field). They are
+# exempt from the outer-margin check and never count as an overlap victim. This
+# lets BCG-style full-bleed/sidebar layouts pass while normal content shapes
+# stay strictly checked. Opt in by naming: background_*, *_sidebar, image_*, bg.
+_DECOR_PREFIXES = ("background", "image", "bg", "sidebar", "panel", "field")
+# Plot regions whose internal markers/labels (and on-chart annotations) legitimately
+# overlap each other and the plot — a scatter/bubble chart is one visual unit.
+_PLOT_PREFIXES = ("plot",)
+_PLOT_CHILD_PREFIXES = ("pt", "ptlbl", "bub", "bublbl", "annot", "marker", "dot")
+# Overlay labels that intentionally sit on/near a panel, image, tile, or chart:
+# image captions, contents-tile badges/captions, on-chart annotations.
+_OVERLAY_PREFIXES = ("caption", "tile", "tilenum", "annot", "bracket", "tick")
+
+
+def _has_role(name: str, prefixes: tuple) -> bool:
+    n = (name or "").lower()
+    return any(n == p or n.startswith(p + "_") or n.endswith("_" + p) for p in prefixes)
+
+
+def _is_decor(b: "Box") -> bool:
+    """True for full-bleed/panel shapes meant to bleed and host overlaid text."""
+    return _has_role(b.name, _DECOR_PREFIXES)
+
+
+def _contained_in(child: "Box", parent: "Box", pad: float = TOL) -> bool:
+    return (child.left >= parent.left - pad and child.top >= parent.top - pad
+            and child.right <= parent.right + pad and child.bottom <= parent.bottom + pad)
+
+
+# Shapes excluded from the main-content GRID checks (left-margin / row-width /
+# gutter / column alignment): decorative panels, content that lives INSIDE a
+# panel (e.g. sidebar text), eyebrow labels, overlay labels, and plot internals.
+# These have their own intentional geometry and shouldn't force the main column
+# off-grid. The grid checks still apply strictly to ordinary content blocks.
+# Manual chart-component prefixes: a hand-drawn waterfall/bridge (wf_*), a
+# comparison-bar chart (cmp_*), or a manual bar/step set is ONE visual unit whose
+# internal bars legitimately vary in width/left/gutter and may carry value labels
+# on them — like a native chart. Treated as plot-internal for grid + overlap.
+_MANUAL_CHART_PREFIXES = ("wf", "cmp", "bar", "step", "waterfall", "bridge",
+                          "mult", "multlabel", "catlabel", "axis", "grpbar")
+_NON_GRID_PREFIXES = (
+    _DECOR_PREFIXES + _OVERLAY_PREFIXES + _PLOT_PREFIXES + _PLOT_CHILD_PREFIXES
+    + _MANUAL_CHART_PREFIXES
+    + ("eyebrow", "title_rule", "rule", "nav", "logo", "footer", "source",
+       "divider", "vrule", "legend", "icon", "indhdr", "inddesc", "iconlbl",
+       # column sub-headers / labels that sit beside an icon (not main-grid
+       # blocks — they intentionally indent past the icon or sub-label a column)
+       "head", "subhead", "label", "iconlabel", "callout", "operand", "opcap")
+)
+
+
+def _grid_boxes(slide: "SlideInfo") -> list:
+    """Main-content-grid shapes: exclude decor panels, anything inside a panel,
+    eyebrows, overlays, plot internals, rules, footers, and sources.
+    """
+    panels = [b for b in slide.boxes if _is_decor(b)]
+    out = []
+    for b in slide.boxes:
+        if _has_role(b.name, _NON_GRID_PREFIXES):
+            continue
+        if any(_contained_in(b, p) for p in panels):  # sidebar content, etc.
+            continue
+        out.append(b)
+    return out
+
 # --- Text-overflow estimation constants -----------------------------------
 # A proportional glyph's average advance width is ~0.5-0.6 em. Titles here use
 # bold/serif faces that run wider, so 0.58 em is the calibrated value that makes
@@ -259,6 +326,28 @@ def _intersection_area(a: Box, b: Box) -> float:
     return 0.0
 
 
+def _effective_bottom(b: Box) -> float:
+    """The box's real ink bottom: rendered text height for a text box (which may
+    be SHORTER than its declared box when auto_size grows the frame), else the
+    declared bottom. Two stacked auto-size text boxes whose declared boxes touch
+    but whose actual text doesn't should not count as overlapping.
+    """
+    if b.paras:
+        est = _estimated_text_height(b)
+        if est is not None:
+            return round(b.top + est, 3)
+    return b.bottom
+
+
+def _ink_intersection_area(a: Box, b: Box) -> float:
+    """Intersection using each box's effective (text-aware) bottom."""
+    dx = min(a.right, b.right) - max(a.left, b.left)
+    dy = min(_effective_bottom(a), _effective_bottom(b)) - max(a.top, b.top)
+    if dx > 0 and dy > 0:
+        return dx * dy
+    return 0.0
+
+
 # --------------------------------------------------------------------------- #
 # Checks (one per rubric criterion)
 # --------------------------------------------------------------------------- #
@@ -268,6 +357,10 @@ def check_outer_margin_frame(ctx: DeckContext) -> list[dict]:
     out = []
     for s in ctx.slides:
         for b in s.boxes:
+            # Full-bleed panels / image fields are meant to touch the edge, as
+            # are captions anchored to an image's bottom-left corner.
+            if _is_decor(b) or _has_role(b.name, ("caption",)):
+                continue
             off_slide = (
                 b.left < 0 or b.top < 0
                 or b.right > ctx.slide_w or b.bottom > ctx.slide_h
@@ -295,15 +388,44 @@ def check_no_overlap(ctx: DeckContext) -> list[dict]:
     crit = "layout-and-alignment-no-overlap-or-collision"
     out = []
     for s in ctx.slides:
+        plots = [b for b in s.boxes if _has_role(b.name, _PLOT_PREFIXES)]
         for a, b in combinations(s.boxes, 2):
-            area = _intersection_area(a, b)
-            if area > 0:
-                out.append(_problem(
-                    crit, s.index,
-                    f"{a.name!r} and {b.name!r} overlap by "
-                    f"{round(area, 3)} in^2",
-                    [a.name, b.name], [a.as_dict(), b.as_dict()],
-                ))
+            # Use text-aware (rendered) bounds so two stacked auto-size text
+            # boxes aren't flagged just because their declared boxes touch.
+            area = _ink_intersection_area(a, b)
+            if area <= 0:
+                continue
+            # Intentional overlaps in BCG-style layouts:
+            # 1. text/labels sitting ON a full-bleed panel, image field, image
+            #    caption, or a contents-tile (badge + caption on an image tile).
+            if _is_decor(a) or _is_decor(b):
+                continue
+            if _has_role(a.name, _OVERLAY_PREFIXES) or _has_role(b.name, _OVERLAY_PREFIXES):
+                continue
+            # manual chart components (waterfall/comparison bars + their labels)
+            if (_has_role(a.name, _MANUAL_CHART_PREFIXES)
+                    and _has_role(b.name, _MANUAL_CHART_PREFIXES)):
+                continue
+            # 2. scatter/bubble markers, labels, and on-chart annotations that
+            #    live inside a plot region — the chart is one visual unit.
+            ab_plot_children = (
+                _has_role(a.name, _PLOT_CHILD_PREFIXES + _PLOT_PREFIXES)
+                and _has_role(b.name, _PLOT_CHILD_PREFIXES + _PLOT_PREFIXES)
+            )
+            if ab_plot_children:
+                continue
+            if any(
+                (_contained_in(a, p) or _has_role(a.name, _PLOT_CHILD_PREFIXES))
+                and (_contained_in(b, p) or _has_role(b.name, _PLOT_CHILD_PREFIXES))
+                for p in plots
+            ):
+                continue
+            out.append(_problem(
+                crit, s.index,
+                f"{a.name!r} and {b.name!r} overlap by "
+                f"{round(area, 3)} in^2",
+                [a.name, b.name], [a.as_dict(), b.as_dict()],
+            ))
     return out
 
 
@@ -317,7 +439,7 @@ def check_left_margin_consistency(ctx: DeckContext) -> list[dict]:
     # Otherwise a legitimate 3-column layout would read as 3 distinct margins.
     slide_lefts = {}
     for s in ctx.slides:
-        lefts = _block_left_edges(s.boxes)
+        lefts = _block_left_edges(_grid_boxes(s))
         if not lefts:
             continue
         # Cluster lefts within TOL; dominant cluster's representative value.
@@ -356,7 +478,7 @@ def check_edge_and_grid_alignment(ctx: DeckContext) -> list[dict]:
     crit = "layout-and-alignment-edge-and-grid-alignment"
     out = []
     for s in ctx.slides:
-        for row in _rows(s.boxes):
+        for row in _rows(_grid_boxes(s)):
             if len(row) < 2:
                 continue
             widths = [b.width for b in row]
@@ -383,7 +505,7 @@ def check_consistent_gutters(ctx: DeckContext) -> list[dict]:
     out = []
     for s in ctx.slides:
         # Horizontal gutters within rows of 3+.
-        for row in _rows(s.boxes):
+        for row in _rows(_grid_boxes(s)):
             if len(row) < 3:
                 continue
             ordered = sorted(row, key=lambda b: b.left)
@@ -403,7 +525,7 @@ def check_consistent_gutters(ctx: DeckContext) -> list[dict]:
         # and a footer/source line are distinct roles, not list peers, so a
         # title -> body -> footer stack is NOT expected to have even gaps; drop
         # titles and bottom-band (footer/source) boxes before measuring.
-        for col in _columns(s.boxes):
+        for col in _columns(_grid_boxes(s)):
             peers = [
                 b for b in col
                 if b.kind != "title" and b.bottom < ctx.slide_h - 0.6
@@ -541,17 +663,24 @@ def check_y_offset_variation(ctx: DeckContext) -> list[dict]:
     title_tops = {}
     footer_tops = {}
     for s in ctx.slides:
-        titles = [b for b in s.boxes if b.kind == "title"]
+        # Title rhythm only across grid (content) titles — eyebrow slides shift
+        # the title down, and section/cover titles live in a sidebar.
+        grid = _grid_boxes(s)
+        panels = [b for b in s.boxes if _is_decor(b)]
+        titles = [b for b in grid if b.kind == "title"]
         if titles:
             title_tops[s.index] = min(b.top for b in titles)
+        # Footer/source rhythm: only the standard bottom-band source line, NOT a
+        # footer placed inside a sidebar panel (cover/section slides).
         footers = [
             b for b in s.boxes
             if b.kind in ("text", "body") and b.top > ctx.slide_h - 1.0
+            and not any(_contained_in(b, p) for p in panels)
         ]
         if footers:
             footer_tops[s.index] = max(footers, key=lambda b: b.top).top
 
-        out += y_offset_variation(crit, "title", title_tops)
+    out += y_offset_variation(crit, "title", title_tops)
     out += y_offset_variation(crit, "footer/page-number", footer_tops)
     return out
 
