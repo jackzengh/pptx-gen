@@ -11,8 +11,11 @@ description: "Use this skill any time a .pptx file is involved in any way — as
 |------|-------|
 | Read / extract text | `python -m markitdown deck.pptx` |
 | Create from scratch | Read [python-pptx.md](python-pptx.md) |
+| **Design rules (read first)** | Read [design.md](design.md) |
 | Name shapes correctly | Read [naming.md](naming.md) |
 | Validate layout | `python main.py deck.pptx` (or `from harness import check_pptx`) |
+
+**Read [design.md](design.md) before building** — it carries the mandatory design rules (action titles, title connectors, no default "Chart Title", readable tables, the quote-slide pattern) that geometry validation can't enforce but a reader sees instantly.
 
 This skill builds with the **python-pptx** library and validates with **`check_pptx`** — the geometric layout validator in this project at `harness/tools.py`.
 
@@ -105,20 +108,6 @@ Pairings: Georgia/Calibri · Arial Black/Arial · Cambria/Calibri · Trebuchet M
 
 ---
 
-## Content & IB Conventions
-
-These are **content** rules, not geometry — `check_pptx` does not verify them, so build them in from the start. They are what separates a polished investment-banking-style deck from a generic one. Apply on every content slide (the cover and pure section dividers are exempt where noted).
-
-- **Page numbers.** Put a page-number text box on **every content slide** (exclude only the cover and pure section dividers), numbering monotonically, in a consistent corner (e.g. bottom-right) at the same y-offset deck-wide.
-- **Source notes.** **Every** slide with a chart, table, or hard number carries a footnote that starts with `Source:` or `Note:` (e.g. `Source: FY2021 10-K`). Same y-offset and small muted size deck-wide.
-- **Numeric table columns are right- or decimal-aligned**, never left-aligned. Set `cell.text_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT` for every all-numeric column; label/text columns stay left-aligned.
-- **Action titles.** Each content-slide title states a **claim with a verb** ("Margins expanded sharply…", "Mobile revenue nearly doubled…"), not a bare topic label ("Overview"). Aim for ≥5 words with a finite verb.
-- **Consistent number formatting.** One format per metric deck-wide: fixed decimals (all multiples as `12.3x`), one currency scale per metric (don't mix `$3.37B` and `$3,373M` for the *same* metric), consistent unit symbols.
-- **One message per slide.** Exactly one title-level headline; sub-heads ("Why it matters", "So what") are body-level, not a second competing title.
-- **One title-case convention deck-wide** — pick sentence case OR title case for all titles and don't mix.
-
----
-
 ## QA (Required) — via `check_pptx`
 
 **Assume there are problems. Your job is to find them.** Your first render is almost never correct.
@@ -127,15 +116,13 @@ These are **content** rules, not geometry — `check_pptx` does not verify them,
 
 Set `tf.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT` on **every** text frame (rule 1). It is the correct authoring choice: in PowerPoint and LibreOffice the box grows to fit its text instead of clipping it, so your slides render without truncated content.
 
-**Understand what `auto_size` does in the stored file:**
+**But be clear about the limit — this is the single most important thing to understand about `check_pptx`:**
 
-`check_pptx` reads the **stored** geometry — the `left/top/width/height` written into the file (`shape.left`, etc.). Setting `auto_size` writes an autofit *flag* (`<a:spAutoFit/>`) into the XML; it does **not** rewrite the stored width/height. The box only physically grows when a renderer (PowerPoint/LibreOffice) opens and reflows it — and that grown size is never written back to the stored geometry (verified: even a LibreOffice round-trip leaves the stored height unchanged). So `auto_size` alone does not make the stored box match the rendered text.
+`check_pptx` reads only **stored** geometry — the `left/top/width/height` written into the file (`shape.left`, etc.). Setting `auto_size` writes an autofit *flag* (`<a:spAutoFit/>`) into the XML; it does **not** rewrite the stored width/height. The box only physically grows when a renderer (PowerPoint/LibreOffice) opens and reflows it — and that grown size is never written back to the stored geometry (verified: even a LibreOffice round-trip leaves the stored height unchanged).
 
-**What `check_pptx` now does about this:** it **measures** how tall each text box's text actually renders — using real font metrics (the bundled fonts in `harness/fonts/`, accounting for the font family, size, bold/italic) to compute line wrapping — and flags `typography-text-fits-its-box` when a box's text overflows **and that overspill collides with the shape directly below it** (e.g. a one-line-tall title that wraps to three lines and crashes into the cards beneath). This is the most common real defect and `check_pptx` now catches it.
+> **Therefore `check_pptx` cannot detect text overflowing inside a box — full stop.** Its docstring says exactly this ("cannot detect text overflowing inside a box; python-pptx does not reflow text"). Do not assume `auto_size` makes overflow show up in the report. It does not.
 
-> The measurement is close to the renderer but not pixel-identical. It fires only on genuine collisions (it won't nag about a box that's a hair short with empty space below). Trust an overflow finding as a real defect to fix; a final visual render is still the confirmation, especially for wide serif faces at the wrap boundary.
-
-What this means in practice: **size title boxes for the number of lines they will actually wrap to** (a long action-title in a 36–40pt face spans ~2–3 lines at full width; budget ~1.2×font-size per line) and leave clear vertical gap before the next element. If `check_pptx` reports an overflow collision, grow the box and/or push the lower shape down.
+What this means in practice: size your text boxes generously from the start, and **catch overflow with a visual render** (see Known blind spots below), not with `check_pptx`. `check_pptx` is a geometry gate for the boxes you declared — not a text-fit checker.
 
 ### Run it
 
@@ -167,11 +154,11 @@ The report is:
 
 For each problem: `slide` is 1-based, `shapes` names the offenders (this is why naming matters — see [naming.md](naming.md)), and `boxes_in` gives their boxes in inches so you know exactly what to move. `ok` is `true` only when there are **zero** problems.
 
-### The criteria and how to fix each
+### The 7 criteria and how to fix each
 
 Single tolerance throughout: **`TOL = 0.1in`**. Two coordinates closer than that count as "the same."
 
-Criterion ids below are shortened; in the JSON the layout ones are prefixed with `layout-and-alignment-` (e.g. `layout-and-alignment-no-overlap-or-collision`); the overflow one is `typography-text-fits-its-box`.
+Criterion ids below are shortened; in the JSON each is prefixed with `layout-and-alignment-` (e.g. `layout-and-alignment-no-overlap-or-collision`).
 
 | Criterion (weight) | Fails when | Fix |
 |---|---|---|
@@ -181,20 +168,18 @@ Criterion ids below are shortened; in the JSON the layout ones are prefixed with
 | `edge-and-grid-alignment` (6) | peer boxes in a row have unequal widths or non-aligned tops | give row peers identical width and top |
 | `consistent-gutters` (5) | gaps in a row/column of 3+ vary | make the gaps equal |
 | `element-boxing` (6) | a chart/table has no caption within 0.1in above it | add a caption textbox whose bottom is within 0.1in of the chart/table top, overlapping it in x |
-| `text-fits-its-box` | a box's text is measured to wrap past its box AND overlap the shape below | grow the box to fit the wrapped lines, and/or move the lower shape down so the text clears it |
 | `vertical-rhythm` (3) | the title-top-y or footer-top-y varies across slides | put the title (and footer) at the same y on every slide |
 
 ### Known blind spots
 
-`check_pptx` is geometry-first (plus a real-font text-height measurement for overflow). It will **not** reliably catch:
+`check_pptx` is geometry-only, reading the boxes you declared. It will **not** catch:
 
-- **In-box text overflow that does NOT hit another shape** — overflow is flagged only when the overspill collides with the shape below (the visible defect). Text that overflows into empty space, or a wide serif at the wrap boundary the measurement just misses, can still slip past. A visual render is the final word.
+- **In-box text overflow** — text spilling past the bottom/edge of its box. `auto_size` does not change this (see above). **This is the main thing you must check by eye.**
 - **The true slide background** — full-bleed color set with `slide.background.fill` lives in `<p:bg>`, is not a shape, and is never walked. (Good: a full-bleed background can't trip overlap/margin checks.)
 - **Decorative `kind="other"` shapes** — a filled rectangle with no text frame is classified `other`. It is **skipped** by alignment/left-margin/gutter checks but **still counted** by overlap and outer-margin. So a background band can collide or bleed off the edge and *will* be flagged, but won't be forced to align to the grid.
 - **Color, contrast, and font choices** — geometry says nothing about these.
-- **Content & IB conventions** — page numbers, source notes, numeric right-alignment, action titles (see "Content & IB Conventions" above). Not geometry; build them in from the start.
 
-A visual render is still required as the second gate — render to images and inspect them (yourself or with a subagent) for overflow, clipping, contrast, and color:
+Because text overflow is a real blind spot, **always do a visual render** as a second gate — render to images and inspect them (yourself or with a subagent) for overflow, clipping, contrast, and color:
 
 ```bash
 soffice --headless --convert-to pdf deck.pptx

@@ -4,6 +4,24 @@ Concrete, non-negotiable rules that `check_pptx` cannot fully verify but a reade
 
 ---
 
+## Grader conventions (these score the deck — follow every one)
+
+A separate rubric grader scores typography, color, and IB conventions beyond geometry. These rules are what took a deck from 41% → 100%. Each is a hard pass/fail (and several feed binary penalties worth −10 to −15), so satisfy all:
+
+1. **Action titles — every slide, including section dividers and a contents page.** A title must be a full sentence: **≥5 words AND contain a finite verb**. The grader matches verbs from a fixed lexicon — safe choices: *is, are, drives, leads, reached, grew, rose, holds, anchors, exceeds, shows, supports*-NO/*added*-NO. Avoid *supports, contributes, represents, measures, examines, powers, reinforces, generated, assembled* — they are NOT in the lexicon and FAIL. Rephrase: "The F-Series **drives** ~$49 billion in US GDP" (not "contributes"); "Ford **leads** US pickup assembly" (not "assembled"). Bare noun-phrase titles ("Overview", "Context") fail.
+2. **Source line on EVERY data slide** (any chart/table/number). It must start with the literal marker **"Source:" or "Note:"** — and note the marker regex matches the whole word, so **"Sources:" (plural) FAILS**. Always write **"Source:"** even for multiple sources.
+3. **Page numbers** on every content slide (not the cover), monotonic, bottom corner. Name them `pagenum_N`.
+4. **One font size per logical level deck-wide.** Pick exactly one size each for: title (all action titles same pt), body, and footnote/caption/source. The grader lumps anything named `caption*` with footnotes — so **captions and source lines must be the same size** (e.g. both 9pt). Big hero stat numbers may be their own consistent "display" tier.
+5. **≤6 non-neutral hues** deck-wide (black/white/grays don't count). One brand color + a dark variant + light tint is plenty.
+6. **Contrast ≥4.5:1 for every text run vs its background.** White text on a *bright* mid-tone (e.g. green #2E9E7B) is only ~3.3:1 → FAIL; use a **darker panel** (#1B6B52 gives 6.4:1) so white text passes. Never put muted grey (#666) on a colored panel — move that text onto white or make it white. Compute the WCAG ratio when unsure.
+7. **Fixed title-top y on every content slide** (the cover/title slide is exempt). Eyebrow labels go in a reserved strip ABOVE the fixed title-top — they must not push the title down.
+8. **Nothing in the outer 0.3in margin band.** Keep all shapes (except intentional full-bleed `background_*` panels/images) ≥0.3in from every edge. The footer/source band must end by ~7.16in on a 7.5in slide — bottom-anchor multi-line sources so they grow up, not down.
+9. **One message per slide; consistent number formatting** (same decimals/currency-scale/unit per metric).
+
+(`check_pptx` covers geometry; this rubric covers the rest. A deck that passes check_pptx can still score 40% on the rubric — both matter.)
+
+---
+
 ## Vertical rhythm — fixed constants (use these exactly)
 
 Pick once, apply on **every** content slide so the eye never re-finds the title (`check_pptx` enforces title `vertical-rhythm` and left-margin consistency). All in inches.
