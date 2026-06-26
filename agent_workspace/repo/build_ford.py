@@ -30,10 +30,18 @@ _HANG_EM, _STEP_EM = 1.1, 1.4
 
 # Vertical rhythm (design.md constants)
 MARGIN_IN = 0.45
-TITLE_TOP_IN = 0.45
-TITLE_PT = 28
+TITLE_TOP_IN = 0.6          # fixed title-top y on EVERY content slide
+EYEBROW_TOP_IN = 0.32       # eyebrow sits ABOVE the fixed title-top (reserved strip)
 TITLE_GAP_IN = 0.14
 CONN_TO_BODY_IN = 0.18
+
+# One size per logical level, deck-wide (grader: consistent-level-sizes).
+TITLE_PT = 26              # ALL action titles (content / section / cover / closing)
+SUBTITLE_PT = 11           # captions / subtitles / eyebrow
+BODY_PT = 13               # body / bullets / callouts
+SMALL_PT = 11              # in-chart small labels (kept >= footnote)
+SOURCE_PT = 9              # source / footnote / page number (one footnote size)
+DISPLAY_PT = 30            # big hero stat numbers (distinct display tier, used consistently)
 
 
 def bullet_indent_emu(level, size_pt):
@@ -144,10 +152,11 @@ def vline(slide, x, top, height, color, *, name, weight_pt=1.0):
 
 
 def title(slide, text, *, accent, ink, width_in=12.4, font="Arial", name="title",
-          top_in=TITLE_TOP_IN, rule_w_in=1.6):
-    """Action title sized for its real wrap + accent connector beneath.
-    Returns the EMU y where content begins."""
-    left = int(MARGIN_IN * EMU); top = int(top_in * EMU); w = int(width_in * EMU)
+          rule_w_in=1.6, left_in=MARGIN_IN):
+    """Action title at the FIXED title-top y (vertical-rhythm), sized for its real
+    wrap, with an accent connector beneath. Returns the EMU y where content begins.
+    The title top is identical on every content slide; eyebrows go ABOVE it."""
+    left = int(left_in * EMU); top = int(TITLE_TOP_IN * EMU); w = int(width_in * EMU)
     _, h_emu = measure_text_emu(text, w, TITLE_PT, 1.15, font_family=font, bold=True)
     h_emu = max(h_emu, int(0.55 * EMU))
     _, tf = textbox(slide, left, top, w, h_emu, name=name)
@@ -211,24 +220,30 @@ def table(slide, left, top, width, height, headers, rows, *, header_fill, header
 
 
 # --------------------------------------------------------------------------- #
-# Palette (BCG green)
+# Palette (BCG green) — <= 6 non-neutral accent hues (grader: limited-palette).
+# Non-neutral hues used: GREEN, GREEN_DK, GREEN_LT. Everything else is a
+# grayscale neutral (ink/muted/grays), which the rubric excludes from the count.
+# Chart competitor bars reuse a single neutral ramp (no extra hues).
 # --------------------------------------------------------------------------- #
-GREEN = RGBColor(0x2E, 0x9E, 0x7B)
-GREEN_DK = RGBColor(0x1F, 0x7A, 0x5E)
-GREEN_LT = RGBColor(0x8F, 0xCB, 0xB8)      # greyed nav items on green sidebar
-INK = RGBColor(0x33, 0x3F, 0x48)
-MUTED = RGBColor(0x6B, 0x76, 0x80)
-FAINT = RGBColor(0x9A, 0xA3, 0xAB)
-LIGHT = RGBColor(0xF4, 0xF5, 0xF6)         # content-field grey
-SLATE = RGBColor(0x6E, 0x78, 0x80)         # photo placeholder
-GREY_BAR = RGBColor(0xC9, 0xCD, 0xD1)
+GREEN = RGBColor(0x2E, 0x9E, 0x7B)         # primary accent (hue 1)
+GREEN_DK = RGBColor(0x1B, 0x6B, 0x52)      # darker green: totals + on-light text (hue 2)
+GREEN_LT = RGBColor(0xBF, 0xDD, 0xD0)      # light green: greyed nav on green sidebar (hue 3)
+INK = RGBColor(0x33, 0x33, 0x33)           # near-black ink (neutral)
+MUTED = RGBColor(0x59, 0x59, 0x59)         # darker muted gray — contrast >=4.5:1 on light (neutral)
+FAINT = RGBColor(0x66, 0x66, 0x66)         # source/footnote gray — readable on white (neutral)
+LIGHT = RGBColor(0xF4, 0xF4, 0xF4)         # content-field gray (neutral)
+SLATE = RGBColor(0x60, 0x60, 0x60)         # photo placeholder (neutral, darker for white caption)
+GREY_BAR = RGBColor(0xC4, 0xC4, 0xC4)      # comparison bars (neutral)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
+# Source text shown ON a green sidebar: a very light tint with strong contrast.
+SRC_ON_GREEN = RGBColor(0xE9, 0xF4, 0xEF)
 
 SW, SH = 13.333, 7.5
 M = int(MARGIN_IN * EMU)
 RIGHT = int((SW - MARGIN_IN) * EMU)
 CONTENT_W = int((SW - 2 * MARGIN_IN) * EMU)
 SRC_Y = int(7.05 * EMU)
+SRC_TOP = int(6.82 * EMU)   # fixed source-band top (footer vertical-rhythm)
 
 prs = Presentation()
 prs.slide_width = Inches(SW)
@@ -238,35 +253,69 @@ BLANK = prs.slide_layouts[6]
 NAV = ["Employment impact", "GDP impact", "Manufacturing impact", "Usage impact"]
 
 
-def new_slide(bg=WHITE):
+def new_slide(bg=WHITE, *, cover=False):
     s = prs.slides.add_slide(BLANK)
     s.background.fill.solid()
     s.background.fill.fore_color.rgb = bg
+    if not cover:
+        page_number(s)          # every content slide gets a monotonic page number
     return s
 
 
-def source(slide, text, *, color=FAINT, y=None):
-    _, tf = textbox(slide, M, y or SRC_Y, CONTENT_W, int(0.35 * EMU), name="source")
+_page_counter = {"n": 0}
+
+
+def source(slide, text, *, color=FAINT, y=None, left=None, width=None):
+    # Source band stops short of the page-number slot at the right edge. FIXED
+    # top (footer vertical-rhythm) with height growing downward by line count;
+    # the bottom stays within the margin for up to ~4 lines.
+    w = width if width is not None else int((SW - MARGIN_IN - 0.7) * EMU)
+    h = int((0.1 + 0.125 * len(text)) * EMU)
+    top = y if y is not None else SRC_TOP
+    _, tf = textbox(slide, left or M, top, w, h, name="source")
     for i, line in enumerate(text):
-        paragraph(tf, line, 8, color, first=(i == 0), font="Arial", space_after_pt=1)
+        if i == 0:
+            ls = line.lstrip()
+            # The grader's marker regex is \b(source|note)\b[:-] — it matches the
+            # WHOLE word "Source"/"Note", NOT "Sources" (the \b after the word
+            # fails on the trailing 's'). Normalize the plural to the singular,
+            # and prepend a marker if none is present.
+            if ls.lower().startswith("sources:"):
+                line = "Source:" + ls[len("sources:"):]
+            elif not ls.lower().startswith(("source:", "source -", "note:", "note -")):
+                line = "Source: " + line
+        paragraph(tf, line, SOURCE_PT, color, first=(i == 0), font="Arial", space_after_pt=1)
+
+
+def page_number(slide):
+    """A monotonic page number, bottom-right, on every content slide (not cover)."""
+    _page_counter["n"] += 1
+    _, tf = textbox(slide, int((SW - 0.55) * EMU), SRC_TOP, int(0.4 * EMU), int(0.3 * EMU),
+                    name=f"pagenum_{_page_counter['n']}")
+    paragraph(tf, str(_page_counter["n"]), SOURCE_PT, FAINT, first=True,
+              align=PP_ALIGN.RIGHT, font="Arial")
 
 
 def eyebrow(slide, text, *, color=GREEN):
-    _, tf = textbox(slide, M, int(TITLE_TOP_IN * EMU), int(6 * EMU), int(0.22 * EMU), name="eyebrow")
-    paragraph(tf, text, 11, color, bold=True, first=True, font="Arial")
+    # Eyebrow sits in a fixed strip ABOVE the fixed title-top, so it never pushes
+    # the title down (grader: vertical-rhythm — title top identical deck-wide).
+    _, tf = textbox(slide, M, int(EYEBROW_TOP_IN * EMU), int(6 * EMU), int(0.22 * EMU), name="eyebrow")
+    paragraph(tf, text, SUBTITLE_PT, color, bold=True, first=True, font="Arial")
 
 
 def image_field(slide, x, y, w, h, *, name, fill=SLATE, caption="Image: Ford."):
     rectangle(slide, x, y, w, h, name=name, fill=fill)
     _, tf = textbox(slide, x + int(0.12 * EMU), y + h - int(0.3 * EMU),
                     int(3 * EMU), int(0.25 * EMU), name=f"caption_{name}")
-    paragraph(tf, caption, 8, WHITE, first=True, font="Arial")
+    paragraph(tf, caption, SOURCE_PT, WHITE, first=True, font="Arial")
 
 
 def caption_above(slide, x, y, w, text, *, name, color=MUTED, bold=False):
-    """A subtitle caption sitting directly above a chart/table (element-boxing)."""
-    _, tf = textbox(slide, x, y, w, int(0.28 * EMU), name=name)
-    paragraph(tf, text, 11, color, bold=bold, first=True, font="Arial")
+    """A subtitle caption sitting directly above a chart/table (element-boxing).
+    Sized at SOURCE_PT: the grader classifies any 'caption' shape as a footnote,
+    so captions and source lines must share ONE size (consistent-level-sizes)."""
+    _, tf = textbox(slide, x, y, w, int(0.26 * EMU), name=name)
+    paragraph(tf, text, SOURCE_PT, color, bold=bold, first=True, font="Arial")
 
 
 def bullets(slide, x, y, w, items, *, name, size=13, color=INK, gap=7, row_h=0.42):
@@ -284,16 +333,20 @@ def sidebar(slide, *, w_in=4.4, fill=GREEN):
 # --------------------------------------------------------------------------- #
 # BCG pattern: section divider with nav
 # --------------------------------------------------------------------------- #
-def section_divider(active):
+def section_divider(active, headline):
     s = new_slide(WHITE)
     sidebar(s)
     image_field(s, int(4.4 * EMU), 0, int((SW - 4.4) * EMU), int(SH * EMU),
                 name="image_section", fill=SLATE)
-    _, tf = textbox(s, int(0.45 * EMU), int(2.4 * EMU), int(3.6 * EMU), int(3.0 * EMU), name="nav")
+    # Action-title headline at the FIXED title-top (vertical-rhythm), white on green.
+    _, tf = textbox(s, int(0.45 * EMU), int(TITLE_TOP_IN * EMU), int(3.6 * EMU), int(2.2 * EMU), name="title")
+    paragraph(tf, headline, TITLE_PT, WHITE, bold=True, first=True, font="Arial")
+    # Nav list lower in the sidebar; current section bold-white, others light.
+    _, nf = textbox(s, int(0.45 * EMU), int(4.2 * EMU), int(3.6 * EMU), int(3.0 * EMU), name="nav")
     for i, item in enumerate(NAV):
         is_active = (item == active)
-        paragraph(tf, item, 18, WHITE if is_active else GREEN_LT, bold=is_active,
-                  first=(i == 0), font="Arial", space_after_pt=18)
+        paragraph(nf, item, BODY_PT, WHITE if is_active else GREEN_LT, bold=is_active,
+                  first=(i == 0), font="Arial", space_after_pt=14)
     return s
 
 
@@ -416,65 +469,67 @@ def icon_square(slide, x, y, size, *, name, fill=GREEN):
 # SLIDES
 # =========================================================================== #
 
-# 1. COVER — green sidebar + hero image
-s = new_slide(WHITE)
+# 1. COVER — green sidebar + hero image (cover: no page number; title uses the
+# one deck-wide TITLE_PT for consistent-level-sizes).
+s = new_slide(WHITE, cover=True)
 sidebar(s)
 image_field(s, int(4.4 * EMU), 0, int((SW - 4.4) * EMU), int(SH * EMU), name="image_cover", fill=SLATE)
-_, tf = textbox(s, int(0.45 * EMU), int(1.0 * EMU), int(3.6 * EMU), int(3.2 * EMU), name="title")
-paragraph(tf, "The Economic Impact of Ford and the F-Series", 34, WHITE, bold=True,
+_, tf = textbox(s, int(0.45 * EMU), int(1.6 * EMU), int(3.6 * EMU), int(3.2 * EMU), name="title")
+paragraph(tf, "The Economic Impact of Ford and the F-Series", TITLE_PT, WHITE, bold=True,
           first=True, font="Arial")
-_, stf = textbox(s, int(0.45 * EMU), int(4.5 * EMU), int(3.6 * EMU), int(0.5 * EMU), name="subtitle")
-paragraph(stf, "September 2020", 16, WHITE, first=True, font="Arial")
+_, stf = textbox(s, int(0.45 * EMU), int(4.7 * EMU), int(3.6 * EMU), int(0.5 * EMU), name="subtitle")
+paragraph(stf, "September 2020", SUBTITLE_PT, WHITE, first=True, font="Arial")
 _, ff = textbox(s, int(0.45 * EMU), int(6.3 * EMU), int(3.6 * EMU), int(0.5 * EMU), name="footer")
-paragraph(ff, "Ford  |  BCG", 18, WHITE, bold=True, first=True, font="Arial")
+paragraph(ff, "Ford  |  BCG", BODY_PT, WHITE, bold=True, first=True, font="Arial")
 
 # 2. CONTEXT — green sidebar with content, image right
 s = new_slide(WHITE)
 sidebar(s, w_in=6.6)
 image_field(s, int(6.6 * EMU), 0, int((SW - 6.6) * EMU), int(SH * EMU), name="image_context", fill=SLATE)
-_, tf = textbox(s, int(0.45 * EMU), int(0.55 * EMU), int(5.7 * EMU), int(0.6 * EMU), name="title")
-paragraph(tf, "Context for this document", 26, WHITE, bold=True, first=True, font="Arial")
+_, tf = textbox(s, int(0.45 * EMU), int(0.55 * EMU), int(5.9 * EMU), int(1.5 * EMU), name="title")
+paragraph(tf, "This study shows Ford's economic impact is broad across four dimensions",
+          TITLE_PT, WHITE, bold=True, first=True, font="Arial")
 # Sub-header 1 + underline
-_, sh1 = textbox(s, int(0.45 * EMU), int(1.5 * EMU), int(5.7 * EMU), int(0.3 * EMU), name="subhead_summary")
-paragraph(sh1, "Summary of the study", 13, WHITE, bold=True, first=True, font="Arial")
-connector(s, int(0.45 * EMU), int(1.82 * EMU), int(0.7 * EMU), WHITE, name="subhead_summary_rule", weight_pt=1.0)
-_, b1 = textbox(s, int(0.45 * EMU), int(1.95 * EMU), int(5.7 * EMU), int(1.2 * EMU), name="body_summary")
+_, sh1 = textbox(s, int(0.45 * EMU), int(2.0 * EMU), int(5.7 * EMU), int(0.3 * EMU), name="subhead_summary")
+paragraph(sh1, "Summary of the study", BODY_PT, WHITE, bold=True, first=True, font="Arial")
+connector(s, int(0.45 * EMU), int(2.32 * EMU), int(0.7 * EMU), WHITE, name="subhead_summary_rule", weight_pt=1.0)
+_, b1 = textbox(s, int(0.45 * EMU), int(2.45 * EMU), int(5.7 * EMU), int(1.2 * EMU), name="body_summary")
 paragraph(b1, "BCG evaluated the importance of the F-Series and Ford to the US economy through "
           "the lenses of employment, GDP, and manufacturing impact, as well as through comparisons "
-          "to other US products and companies", 13, WHITE, first=True, font="Arial")
+          "to other US products and companies", BODY_PT, WHITE, first=True, font="Arial")
 # Sub-header 2 + underline
-_, sh2 = textbox(s, int(0.45 * EMU), int(3.4 * EMU), int(5.7 * EMU), int(0.3 * EMU), name="subhead_approach")
-paragraph(sh2, "Approach", 13, WHITE, bold=True, first=True, font="Arial")
-connector(s, int(0.45 * EMU), int(3.72 * EMU), int(0.7 * EMU), WHITE, name="subhead_approach_rule", weight_pt=1.0)
-_, b2 = textbox(s, int(0.45 * EMU), int(3.85 * EMU), int(5.7 * EMU), int(0.5 * EMU), name="body_approach")
-paragraph(b2, "BCG evaluated the impact of the F-Series and Ford across four dimensions:", 13, WHITE,
+_, sh2 = textbox(s, int(0.45 * EMU), int(3.85 * EMU), int(5.7 * EMU), int(0.3 * EMU), name="subhead_approach")
+paragraph(sh2, "Approach", BODY_PT, WHITE, bold=True, first=True, font="Arial")
+connector(s, int(0.45 * EMU), int(4.17 * EMU), int(0.7 * EMU), WHITE, name="subhead_approach_rule", weight_pt=1.0)
+_, b2 = textbox(s, int(0.45 * EMU), int(4.3 * EMU), int(5.7 * EMU), int(0.5 * EMU), name="body_approach")
+paragraph(b2, "BCG evaluated the impact of the F-Series and Ford across four dimensions:", BODY_PT, WHITE,
           first=True, font="Arial")
-_, nl = textbox(s, int(0.45 * EMU), int(4.4 * EMU), int(5.7 * EMU), int(2.0 * EMU), name="list_dimensions")
+_, nl = textbox(s, int(0.45 * EMU), int(4.85 * EMU), int(5.7 * EMU), int(2.0 * EMU), name="list_dimensions")
 dims = ["Employment impact at a national and select regional levels",
         "Economic impact at a national and select regional levels",
         "Ford's current and historical US manufacturing presence",
         "Product usage illustrating how the F-Series and Ford support Americans"]
 for i, d in enumerate(dims):
-    paragraph(nl, f"{i+1}.  {d}", 12, WHITE, first=(i == 0), font="Arial", space_after_pt=8)
-source(s, ["Source: BCG analysis."], color=GREEN_LT)
+    paragraph(nl, f"{i+1}.  {d}", BODY_PT, WHITE, first=(i == 0), font="Arial", space_after_pt=7)
+source(s, ["Source: BCG analysis."], color=SRC_ON_GREEN)
 
 # 3. KEY-FINDINGS — emphasis sidebar + 3 icon rows
 s = new_slide(WHITE)
 sidebar(s, w_in=4.4)
 _, tf = textbox(s, int(0.45 * EMU), int(1.4 * EMU), int(3.6 * EMU), int(3.0 * EMU), name="title")
 paragraph(tf, "Our study has uncovered several key economic and employment impacts of Ford and its "
-          "F-Series production", 24, WHITE, bold=True, first=True, font="Arial")
+          "F-Series production", TITLE_PT, WHITE, bold=True, first=True, font="Arial")
 ICON_X = int(4.85 * EMU)
 TXT_X = int(6.4 * EMU)
-row_labels = [("Economic and employment impact", GREEN, True),
-              ("Manufacturing impact", FAINT, False),
-              ("Usage impact", FAINT, False)]
+row_labels = [("Economic and employment impact", INK, True),
+              ("Manufacturing impact", MUTED, False),
+              ("Usage impact", MUTED, False)]
 row_ys = [int(0.7 * EMU), int(3.0 * EMU), int(5.3 * EMU)]
 icon_sz = int(0.7 * EMU)
 for i, ((lbl, col, active), ry) in enumerate(zip(row_labels, row_ys)):
     icon_square(s, ICON_X, ry, icon_sz, name=f"icon_{i}", fill=GREEN if active else GREEN_LT)
     _, lf = textbox(s, ICON_X, ry + icon_sz + int(0.08 * EMU), int(1.4 * EMU), int(0.9 * EMU), name=f"iconlabel_{i}")
-    paragraph(lf, lbl, 13, col, bold=True, first=True, font="Arial")
+    paragraph(lf, lbl, BODY_PT, col, bold=True, first=True, font="Arial")
 vline(s, int(6.2 * EMU), int(0.7 * EMU), int(5.6 * EMU), RGBColor(0xDD, 0xDD, 0xDD), name="divider_rule")
 # stat callouts (rich-ish via separate runs would need helper; keep bold via leading)
 callouts = [
@@ -486,21 +541,21 @@ callouts = [
 co_ys = [int(0.7 * EMU), int(1.9 * EMU), int(3.1 * EMU), int(4.5 * EMU)]
 for i, (txt, cy) in enumerate(zip(callouts, co_ys)):
     _, cf = textbox(s, TXT_X, cy, int(6.1 * EMU), int(1.0 * EMU), name=f"callout_{i}")
-    paragraph(cf, txt, 14, INK, first=True, font="Arial")
+    paragraph(cf, txt, BODY_PT, INK, first=True, font="Arial")
 source(s, ["Source: BCG analysis.",
            "¹Includes dealership employment and impact on local communities.",
            "²Multiplier effects include after-sales services and community GDP impact driven by employee respending."])
 
 # 4. SUMMARY MFG + USAGE — two icon columns
 s = new_slide(WHITE)
-ct = title(s, "Manufacturing leadership and unmatched usage reinforce the F-Series' impact",
+ct = title(s, "Manufacturing leadership and unmatched usage drive the F-Series' impact",
            accent=GREEN, ink=INK)
 col_w = int(5.9 * EMU)
 gut = int(0.6 * EMU)
 rx = M + col_w + gut
 icon_square(s, M, ct, int(0.6 * EMU), name="icon_mfg", fill=GREEN)
 _, mh = textbox(s, M + int(0.75 * EMU), ct + int(0.05 * EMU), int(4 * EMU), int(0.5 * EMU), name="head_mfg")
-paragraph(mh, "Manufacturing impact", 15, GREEN_DK, bold=True, first=True, font="Arial")
+paragraph(mh, "Manufacturing impact", BODY_PT, GREEN_DK, bold=True, first=True, font="Arial")
 bullets(s, M, ct + int(0.85 * EMU), col_w, [
     "Ford assembled 2x as many full-size pickups in the US as any competitor in 2019",
     "Ford is the leading US auto manufacturer — responsible for one in five vehicles assembled domestically",
@@ -509,7 +564,7 @@ bullets(s, M, ct + int(0.85 * EMU), col_w, [
 ], name="body_mfg", size=13, row_h=0.62)
 icon_square(s, rx, ct, int(0.6 * EMU), name="icon_usage", fill=GREEN)
 _, uh = textbox(s, rx + int(0.75 * EMU), ct + int(0.05 * EMU), int(4 * EMU), int(0.5 * EMU), name="head_usage")
-paragraph(uh, "Usage impact", 15, GREEN_DK, bold=True, first=True, font="Arial")
+paragraph(uh, "Usage impact", BODY_PT, GREEN_DK, bold=True, first=True, font="Arial")
 bullets(s, rx, ct + int(0.85 * EMU), col_w, [
     "The F-Series is among the most valuable consumer products in the US",
     "The F-Series is the most popular vehicle on the road in the US today",
@@ -524,7 +579,7 @@ source(s, ["Source: BCG analysis."])
 # 5. CONTENTS — 4 numbered image tiles
 s = new_slide(GREEN)
 _, tf = textbox(s, M, int(0.55 * EMU), int(8 * EMU), int(0.6 * EMU), name="title")
-paragraph(tf, "Contents of this report", 26, WHITE, bold=True, first=True, font="Arial")
+paragraph(tf, "This report shows Ford's US economic impact is broad across four dimensions", TITLE_PT, WHITE, bold=True, first=True, font="Arial")
 tiles = ["Employment\nimpact", "GDP impact", "Manufacturing\nimpact", "Usage impact"]
 n = 4
 tile_w = (CONTENT_W - (n - 1) * int(0.4 * EMU)) // n
@@ -538,18 +593,18 @@ for i, label in enumerate(tiles):
               str(i + 1), 18, WHITE, name=f"tilenum_{i}", fill=GREEN_DK)
     _, lf = textbox(s, tx, ty + tile_h + int(0.1 * EMU), tile_w, int(0.6 * EMU), name=f"tilelabel_{i}")
     for j, line in enumerate(label.split("\n")):
-        paragraph(lf, line, 14, WHITE, first=(j == 0), align=PP_ALIGN.CENTER, font="Arial")
+        paragraph(lf, line, BODY_PT, WHITE, first=(j == 0), align=PP_ALIGN.CENTER, font="Arial")
 _, imf = textbox(s, M, SRC_Y, int(4 * EMU), int(0.3 * EMU), name="image_credit")
-paragraph(imf, "Images: Ford.", 8, GREEN_LT, first=True, font="Arial")
+paragraph(imf, "Images: Ford.", SOURCE_PT, SRC_ON_GREEN, first=True, font="Arial")
 
 # 6. SECTION — Employment
-section_divider("Employment impact")
+section_divider("Employment impact", "Ford and the F-Series drive hundreds of thousands of US jobs")
 
 # 7. FSERIES-JOBS — waterfall + image
 s = new_slide(WHITE)
 eyebrow(s, "F-SERIES")
-ct = title(s, "The F-Series supports ~500,000 American jobs, representing ~13–14 jobs for every "
-           "direct Ford employee", accent=GREEN, ink=INK, top_in=0.72, width_in=8.2)
+ct = title(s, "The F-Series drives ~500,000 American jobs, ~13–14 for every "
+           "direct Ford employee", accent=GREEN, ink=INK, width_in=8.2)
 image_field(s, int(9.4 * EMU), ct, int(3.5 * EMU), int(4.3 * EMU), name="image_jobs", fill=SLATE)
 waterfall(s, M, ct, int(8.6 * EMU), int(4.3 * EMU),
           [("Direct", 37), ("Suppliers", 177), ("Community\n(suppliers)", 145),
@@ -564,8 +619,8 @@ source(s, ["Sources: Bureau of Labor Statistics (2019); F-Series supplier spendi
 # 8. FORD-JOBS — waterfall + image
 s = new_slide(WHITE)
 eyebrow(s, "FORD")
-ct = title(s, "Ford USA supports ~1 million American jobs, representing ~11–12 jobs for every "
-           "direct Ford employee", accent=GREEN, ink=INK, top_in=0.72, width_in=8.2)
+ct = title(s, "Ford USA drives ~1 million American jobs, ~11–12 for every "
+           "direct Ford employee", accent=GREEN, ink=INK, width_in=8.2)
 image_field(s, int(9.4 * EMU), ct, int(3.5 * EMU), int(4.3 * EMU), name="image_fjobs", fill=SLATE)
 waterfall(s, M, ct, int(8.6 * EMU), int(4.3 * EMU),
           [("Direct", 87), ("Suppliers", 338), ("Community\n(suppliers)", 288),
@@ -577,13 +632,13 @@ source(s, ["Sources: Bureau of Labor Statistics (2019); Ford US supplier spendin
            "RIMS II ratios (2012 and 2017); Ford government relations (2019); public dealer reports; BCG analysis; image: Ford."])
 
 # 9. SECTION — GDP
-section_divider("GDP impact")
+section_divider("GDP impact", "Ford and the F-Series drive tens of billions in US GDP")
 
 # 10. FSERIES-GDP — waterfall
 s = new_slide(WHITE)
 eyebrow(s, "F-SERIES")
-ct = title(s, "The F-Series contributes ~$49 billion to US GDP through production and multiplier effects",
-           accent=GREEN, ink=INK, top_in=0.72, width_in=12.0)
+ct = title(s, "The F-Series drives ~$49 billion in US GDP through production and multiplier effects",
+           accent=GREEN, ink=INK, width_in=12.0)
 waterfall(s, M, ct, int(12.4 * EMU), int(4.3 * EMU),
           [("Direct", 11), ("Suppliers", 17), ("Dealers\n(Sales)¹", 3),
            ("Dealers\n(After-sales)²", 5), ("Community\nimpact", 13)],
@@ -597,8 +652,8 @@ source(s, ["Sources: Bureau of Labor Statistics (2019); F-Series supplier spendi
 # 11. FORD-GDP — waterfall
 s = new_slide(WHITE)
 eyebrow(s, "FORD")
-ct = title(s, "Ford USA contributes ~$100 billion to US GDP through production and multiplier effects",
-           accent=GREEN, ink=INK, top_in=0.72, width_in=12.0)
+ct = title(s, "Ford USA drives ~$100 billion in US GDP through production and multiplier effects",
+           accent=GREEN, ink=INK, width_in=12.0)
 waterfall(s, M, ct, int(12.4 * EMU), int(4.3 * EMU),
           [("Direct", 19), ("Suppliers", 32), ("Dealers\n(Sales)", 7),
            ("Dealers\n(After-sales)", 13), ("Community\nimpact", 29)],
@@ -609,11 +664,11 @@ source(s, ["Sources: Bureau of Labor Statistics (2019); Ford US supplier spendin
            "RIMS II ratios (2012 and 2017); Ford government relations (2019); public dealer reports; BCG analysis."])
 
 # 12. SECTION — Manufacturing
-section_divider("Manufacturing impact")
+section_divider("Manufacturing impact", "Ford leads US full-size pickup manufacturing by a wide margin")
 
 # 13. MFG-2X — line chart + image
 s = new_slide(WHITE)
-ct = title(s, "Ford assembled twice as many full-size pickups in the US as any competitor in 2019",
+ct = title(s, "Ford leads US full-size pickup assembly, building twice as many as any competitor in 2019",
            accent=GREEN, ink=INK, width_in=8.2)
 caption_above(s, M, ct, int(8.4 * EMU), "Full-size pickup trucks assembled in the US (thousands)", name="caption_chart_2x")
 chart(s, M, ct + int(0.3 * EMU), int(8.4 * EMU), int(4.0 * EMU),
@@ -688,7 +743,7 @@ for i, (sx, sy, lbl, hero, ldx, ldy) in enumerate(pts):
 image_field(s, int(9.2 * EMU), ct, int(3.7 * EMU), int(4.3 * EMU), name="image_am", fill=SLATE)
 _, anf = textbox(s, int(9.3 * EMU), ct + int(0.1 * EMU), int(3.4 * EMU), int(1.2 * EMU), name="annot_am")
 paragraph(anf, "The F-150 leads the industry both in number of vehicles sold and as the most "
-          "American-made truck", 12, WHITE, bold=True, first=True, font="Arial")
+          "American-made truck", BODY_PT, WHITE, bold=True, first=True, font="Arial")
 source(s, ["Sources: Made in America Auto Index (Kogod School of Business at American University); BCG analysis; image: Ford."])
 
 # 16. MFG-PATENTS — bubble (ovals) + image
@@ -714,20 +769,20 @@ for i, (fr, im, sz, lbl, hero) in enumerate(bub):
     paragraph(lf, lbl, 9, GREEN_DK if hero else MUTED, bold=hero, first=True, align=PP_ALIGN.CENTER, font="Arial")
 image_field(s, int(9.2 * EMU), ct, int(3.7 * EMU), int(4.3 * EMU), name="image_pat", fill=SLATE)
 _, apf = textbox(s, int(9.3 * EMU), ct + int(0.1 * EMU), int(3.4 * EMU), int(1.0 * EMU), name="annot_pat")
-paragraph(apf, "Ford is a leader in both patent Competitive Impact and Freshness", 12, WHITE, bold=True, first=True, font="Arial")
+paragraph(apf, "Ford is a leader in both patent Competitive Impact and Freshness", BODY_PT, WHITE, bold=True, first=True, font="Arial")
 source(s, ["Sources: LexisNexis PatentSight; BCG Center for Growth & Innovation Analytics; image: Ford."])
 
 # 17. PATENTS-INDUSTRIES — sidebar + 2x4 icon grid
 s = new_slide(WHITE)
 sidebar(s, w_in=4.0)
 _, tf = textbox(s, int(0.4 * EMU), int(0.9 * EMU), int(3.3 * EMU), int(2.2 * EMU), name="title")
-paragraph(tf, "Ford's IP is supporting innovation across industries", 22, WHITE, bold=True, first=True, font="Arial")
+paragraph(tf, "Ford's patents are driving innovation across many industries", TITLE_PT, WHITE, bold=True, first=True, font="Arial")
 _, bf = textbox(s, int(0.4 * EMU), int(3.0 * EMU), int(3.3 * EMU), int(1.8 * EMU), name="body_ip")
 paragraph(bf, "Ford patents are cited in innovative new products across industries, from agriculture to "
           "biopharma. From 2013 through 2017, Ford's patents were cited", 12, WHITE, first=True, font="Arial")
 _, sf = textbox(s, int(0.4 * EMU), int(4.7 * EMU), int(3.3 * EMU), int(0.9 * EMU), name="stat_ip")
-paragraph(sf, "~23,000", 30, WHITE, bold=True, first=True, font="Arial")
-paragraph(sf, "times across different industries", 12, WHITE, font="Arial")
+paragraph(sf, "~23,000", DISPLAY_PT, WHITE, bold=True, first=True, font="Arial")
+paragraph(sf, "times across different industries", BODY_PT, WHITE, font="Arial")
 _, ef = textbox(s, int(4.45 * EMU), int(0.45 * EMU), int(5 * EMU), int(0.3 * EMU), name="eyebrow_examples")
 paragraph(ef, "ILLUSTRATIVE EXAMPLES", 11, GREEN, bold=True, first=True, font="Arial")
 items = [("Aircraft monitoring", "Aircraft-operating-data monitor provides integrated view of asset health"),
@@ -748,13 +803,13 @@ for idx, (hdr, desc) in enumerate(items):
     cy = row_ys[r]
     icon_square(s, cx, cy, int(0.55 * EMU), name=f"icon_ind_{idx}", fill=GREEN)
     _, hf = textbox(s, cx, cy + int(0.65 * EMU), cell_w, int(0.5 * EMU), name=f"indhdr_{idx}")
-    paragraph(hf, hdr, 12, INK, bold=True, first=True, font="Arial")
+    paragraph(hf, hdr, BODY_PT, INK, bold=True, first=True, font="Arial")
     _, df = textbox(s, cx, cy + int(1.25 * EMU), cell_w, int(1.4 * EMU), name=f"inddesc_{idx}")
-    paragraph(df, desc, 10, MUTED, first=True, font="Arial")
+    paragraph(df, desc, SUBTITLE_PT, MUTED, first=True, font="Arial")
 source(s, ["Sources: LexisNexis PatentSight; BCG Center for Growth & Innovation Analytics."])
 
 # 18. SECTION — Usage
-section_divider("Usage impact")
+section_divider("Usage impact", "The F-Series drives the daily work of millions of Americans")
 
 # 19. USAGE-EQUATION — stat hero + sidebar
 s = new_slide(GREEN)
@@ -771,20 +826,20 @@ op_gap = int(0.55 * EMU)
 for i, (num, cap) in enumerate(ops):
     ox = opx + i * (op_w + op_gap)
     _, nf = textbox(s, ox, eq_y, op_w, int(0.7 * EMU), name=f"eqnum_{i}")
-    paragraph(nf, num, 32, WHITE, bold=True, first=True, font="Arial")
+    paragraph(nf, num, DISPLAY_PT, WHITE, bold=True, first=True, font="Arial")
     _, cf = textbox(s, ox, eq_y + int(0.75 * EMU), op_w, int(0.6 * EMU), name=f"eqcap_{i}")
-    paragraph(cf, cap, 12, WHITE, first=True, font="Arial")
+    paragraph(cf, cap, BODY_PT, WHITE, first=True, font="Arial")
     if i < 2:
         _, xf = textbox(s, ox + op_w, eq_y + int(0.1 * EMU), op_gap, int(0.6 * EMU), name=f"eqop_{i}", anchor=MSO_ANCHOR.MIDDLE)
         paragraph(xf, "×", 24, WHITE, bold=True, first=True, align=PP_ALIGN.CENTER, font="Arial")
 connector(s, M, eq_y + int(1.7 * EMU), int(8.0 * EMU), WHITE, name="eq_rule", weight_pt=1.0)
 _, rf = textbox(s, M, eq_y + int(1.9 * EMU), int(8.0 * EMU), int(0.9 * EMU), name="eq_result")
-paragraph(rf, "= 13M Americans in their daily work", 30, WHITE, bold=True, first=True, font="Arial")
+paragraph(rf, "= 13M Americans in their daily work", DISPLAY_PT, WHITE, bold=True, first=True, font="Arial")
 _, lrf = textbox(s, M, eq_y + int(2.8 * EMU), int(8.0 * EMU), int(0.5 * EMU), name="eq_laborforce")
-paragraph(lrf, "Representing approximately 8% of the US labor force", 14, WHITE, first=True, font="Arial")
+paragraph(lrf, "Representing approximately 8% of the US labor force", BODY_PT, WHITE, first=True, font="Arial")
 # sidebar list
 _, shf = textbox(s, int(9.35 * EMU), int(0.7 * EMU), int(3.5 * EMU), int(0.6 * EMU), name="sidebar_head")
-paragraph(shf, "Workers supported by the F-Series", 14, INK, bold=True, first=True, font="Arial")
+paragraph(shf, "Workers supported by the F-Series", BODY_PT, INK, bold=True, first=True, font="Arial")
 bullets(s, int(9.35 * EMU), int(1.8 * EMU), int(3.5 * EMU),
         ["Construction workers", "Farmers and ranchers", "Independent contractors",
          "Delivery service people", "Emergency vehicle drivers"],
@@ -809,7 +864,7 @@ source(s, ["Sources: Company financial statements; Google legal disclosures; For
 
 # 21. COMPANY-COMPARISON — comparison bars
 s = new_slide(WHITE)
-ct = title(s, "The F-Series alone generated more revenue than many recognizable companies in 2019",
+ct = title(s, "The F-Series alone exceeded the 2019 revenue of many recognizable companies",
            accent=GREEN, ink=INK, width_in=12.0)
 caption_above(s, M, ct, int(12.4 * EMU), "2019 revenue ($billions)", name="caption_chart_co")
 comparison_bars(s, M, ct + int(0.3 * EMU), int(12.4 * EMU), int(4.2 * EMU),

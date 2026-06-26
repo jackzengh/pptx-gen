@@ -148,3 +148,29 @@ The habits that separate a polished deck from an AI-looking one.
 **Source line on every data slide.** Small muted footnote at `SRC_Y` ("Sources: …"). Footnote superscripts (¹ ²) tie claims to notes, BCG-style.
 
 Sources: [Deckary — Consulting Slide Standards](https://deckary.com/blog/consulting-slide-standards), [Deckary — BCG Presentation Style](https://deckary.com/blog/bcg-presentation-style), [Deckary — PowerPoint Design Guide](https://deckary.com/blog/pillar-powerpoint-design-guide), [Slidor — 15 design rules](https://www.slidor.agency/blog/15-regles-illustrees-pour-ameliorer-le-design-de-vos-presentations-powerpoint), [Flashdocs — 10 design principles](https://www.flashdocs.com/post/10-design-principles-every-slide-creator-should-know), [Microsoft — text spacing in PowerPoint](https://support.microsoft.com/en-us/office/change-text-alignment-indentation-and-spacing-in-powerpoint-36df6486-0118-4e95-b9bd-835eb047ac88).
+
+---
+
+## Grading conventions (consulting rubric — required to score)
+
+A visual grader scores decks on layout, typography, color, and IB conventions. These rules are what separates a 40% deck from a 90%+ deck — apply ALL of them.
+
+**Action titles on EVERY slide (incl. sections & contents).** Every title is a full sentence with a verb and ≥5 words stating a takeaway — never a bare noun phrase. Bad: "Context", "Contents of this report", "Employment impact". Good: "This study measures Ford's economic impact across four dimensions", "Ford and the F-Series support hundreds of thousands of US jobs". Section dividers get a headline sentence too (the nav list is secondary).
+
+**One size per logical level, deck-wide.** Pick ONE pt size for each tier and reuse it everywhere — the grader fails the deck if titles (or body, or footnotes) use 2+ different sizes across slides. A safe tier set:
+- Title = 26pt (ALL action titles: content, section, cover, closing)
+- Display = 30pt (big hero stat numbers only)
+- Body = 13pt (body, bullets, callouts, column headers, captions-in-content)
+- Subtitle/caption/eyebrow = 11pt
+- Source/footnote/page-number = 9pt
+Keep title > body by ≥4pt and body > footnote by ≥2pt (size hierarchy).
+
+**Fixed title-top y on every content slide.** The title box TOP is identical deck-wide (e.g. 0.6in). Eyebrows do NOT push the title down — place the eyebrow in a reserved strip ABOVE the fixed title-top (e.g. 0.32in). The footer/source band and page numbers also share one fixed top.
+
+**≤6 non-neutral accent hues deck-wide.** Black, white, and grays (R≈G≈B) don't count. Use ONE accent family (e.g. green + a darker green + a light green) and render all "muted" elements in grayscale neutrals — including chart competitor bars (a gray ramp, not extra hues).
+
+**Contrast ≥4.5:1 (WCAG).** Source/footnote text must be a dark-enough gray on light backgrounds (e.g. `#606A72` or darker, NOT `#9AA3AB`). On a colored sidebar, use white or a very light tint of the sidebar color (e.g. `#E9F4EF` on green) — never a mid gray.
+
+**Source/Note line on EVERY data slide.** Any slide with a chart, table, or numeric data needs a text box whose first line literally starts with "Source:", "Sources:", or "Note:".
+
+**Page numbers on every content slide** (not the cover), monotonically increasing, small + muted, bottom-right, at the fixed footer top.

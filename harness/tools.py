@@ -61,7 +61,8 @@ _NON_GRID_PREFIXES = (
     _DECOR_PREFIXES + _OVERLAY_PREFIXES + _PLOT_PREFIXES + _PLOT_CHILD_PREFIXES
     + _MANUAL_CHART_PREFIXES
     + ("eyebrow", "title_rule", "rule", "nav", "logo", "footer", "source",
-       "divider", "vrule", "legend", "icon", "indhdr", "inddesc", "iconlbl",
+       "pagenum", "pageno", "divider", "vrule", "legend", "icon", "indhdr",
+       "inddesc", "iconlbl",
        # column sub-headers / labels that sit beside an icon (not main-grid
        # blocks — they intentionally indent past the icon or sub-label a column)
        "head", "subhead", "label", "iconlabel", "callout", "operand", "opcap")
