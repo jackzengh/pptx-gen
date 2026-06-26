@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+.env
+
+# Sandbox-agent run artifacts (pinned workspace + persisted decks)
+agent_workspace/sandbox/
+agent_workspace/out/
+agent_workspace/sandbox-*/
+agent_workspace/out-*/
+agent_workspace/final/
+# LibreOffice lock files
+~$*
