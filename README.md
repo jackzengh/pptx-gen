@@ -74,10 +74,6 @@ The eight checks:
 - **text overflow** — text estimated (via real font metrics, `measure_text_emu`) to spill past its box *and* collide with the shape below.
 - **y-offset variation** — title and footer sit at one fixed y across the deck.
 
-### A note on `auto_size` / `SHAPE_TO_FIT_TEXT`
-
-`auto_size` is **not** required and the harness does not rely on it. The autofit flag only resizes a box when a renderer (PowerPoint/LibreOffice) opens the file — it never rewrites the stored geometry that `check_pptx` reads. So overlap is measured against the **declared** box, and you should size text boxes generously rather than expect autofit to save you. Text overflow is *estimated* from font metrics, not detected from autofit.
-
 ---
 
 ## Specs
@@ -86,15 +82,34 @@ A spec is markdown with **one slide per `##` section**: a slide id, type, and ti
 
 ---
 
-## The `pptx` skill
+## Skills
 
-`agent_workspace/skills/pptx/` is what the agent reads before writing code:
+The agent reads skills from `agent_workspace/skills/` before writing code. Three ship with the project:
+
+### `pptx` — build a deck from a spec
+
+The core deck-builder. `agent_workspace/skills/pptx/`:
 
 - **`SKILL.md`** — workflow + the hard rules `check_pptx` enforces.
 - **`design.md`** — palette, typography, spacing, and grader conventions.
 - **`python-pptx.md`** — API reference and the reusable `textbox`/`paragraph`/`title`/`chart`/`table` helpers.
 - **`naming.md`** — shape-naming convention (role prefixes: `background_`, `chartpart_`, `overlay_`, `meta_`).
 - **`editing.md`** — techniques for modifying an existing `.pptx`.
+
+### `deck-drafting` — make a deck *from scratch*
+
+The upstream step: turn raw source material (a PDF, CSV/XLSX, report, or notes) into a content
+spec in this project's dialect, which the `pptx` skill then builds into a `.pptx`. Use it when you
+have sources rather than a ready `spec.md` — it reads the sources, decides the narrative and
+per-slide content, prepares the chart/table data, and writes the spec (with action titles, a
+layout-diversity budget, and per-slide source citations). `agent_workspace/skills/deck-drafting/`.
+
+### `engineer` — work on the harness itself
+
+Engineering practices for changing this codebase (the `check_pptx` validator, `run_agent.py`, the
+build helpers): the `tools.py`/`utils.py` policy-vs-mechanics split, the validator contract, the
+shape-role conventions, house style, and a checklist for adding or adjusting a layout check.
+`agent_workspace/skills/engineer/`.
 
 ---
 
@@ -113,7 +128,10 @@ agent_workspace/
     task*.md, spec.md     #   task instructions + active spec
     reference_build_deck.py  # a complete working build script the agent reuses
     harness/              #   bundled self-contained copy of the validator
-  skills/pptx/            # the pptx skill the agent reads
+  skills/                 # skills the agent reads
+    pptx/                 #   build a deck from a spec (python-pptx + check_pptx)
+    deck-drafting/        #   sources → content spec (make a deck from scratch)
+    engineer/             #   practices for working on the harness itself
   sandbox-<tag>/          # per-run sandbox (gitignored)
   out-<tag>/              # per-run output: out.pptx + run_log.txt (gitignored)
 ```
