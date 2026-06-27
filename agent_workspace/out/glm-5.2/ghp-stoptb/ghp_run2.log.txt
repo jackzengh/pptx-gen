@@ -1,0 +1,4 @@
+GHP/Stop-TB run 2 (GLM-5.2).
+No run_log.txt was collated to out-ghp2/ (it was empty).
+Deck rescued from sandbox-ghp2/repo/out.pptx before sandbox deletion.
+Console: ghp_run2.console.log. Sandbox also held scratch decks t.pptx/t2.pptx/s7b.pptx (intermediate iterations, discarded).

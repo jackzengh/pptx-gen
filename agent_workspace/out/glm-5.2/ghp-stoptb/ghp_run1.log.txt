@@ -1,0 +1,20 @@
+Built repo/out.pptx — a 24-slide deck for the Stop TB Partnership / McKinsey "Helping Global Health Partnerships to increase their impact" pre-reading (Nov 2009), one slide per ## section in repo/spec.md, in order.
+
+PALETTE / MOTIF (McKinsey deep-navy, content-informed):
+- Primary NAVY #1F3864 + darker panel NAVY2 #2E4D7B (white text ~7.5:1); light STEEL #D6E0F0 header bands (navy text on them); mid-blue ACCENT #2E75B6 for the title connector and the recurring 6-step process-chain chips/line; slate INK #1A2332 body; MUTED #55606B captions/source (>=4.5:1 on white); light FIELD #F2F4F8 card fills; white. All one blue family + neutrals (<=6 non-neutral hues).
+- Repeated motif: (1) short accent connector under every action title (deck spine), (2) numbered 6-step "Performance management" process chain (oval navy chips on an accent line) reused on framework-processes and challenges-processes, (3) navy-headed framed content boxes with steel header bands, (4) full-bleed accent bar on the dark cover/closing bookends.
+- Typography: Georgia bold 24pt action titles, Arial 13pt body, 9pt captions/source/page-numbers, 11pt eyebrows. One size per level deck-wide. Dark cover + closing sandwich light content slides.
+- Layouts varied per spec: navy-sidebar cover; numbered agenda; 2-/3-column framed boxes; 3-phase timeline with "Today" marker; process chain + grouped boxes; definition/mapping/action tables with captions; 2x2 enabler/quadrant grids; pull-quote card grid (7); 2x4 step-card grid; clustered column chart + side metric table (dashboard); 3-step advocacy flow; 4-stage filter funnel with arrows; mission banner + objective columns; mission-card + objective boxes; 4-dimension barometer grid; dark closing timeline + action list.
+
+BUILD APPROACH: Copied the skill's reusable helpers (textbox, paragraph, _apply_bullet, style_run, rectangle, connector, title, chart, table, bullet_mixed) and the reference's source/page-number/footer patterns, then wrote my own framed_box/box_bullets/number_chip/process_chain helpers. Used CANONICAL role prefixes only: background_* decor rectangles for framed-box fields + header bands + cards + chips (overlaid textboxes are overlap-exempt and grid-excluded); true <p:bg> for full-bleed dark/light backgrounds; overlay_caption_* directly above every chart and table; meta_* source lines + page numbers + chrome labels; overlay_eyebrow for the two eyebrow slides; chartpart_* for the filter arrows. Named every shape.
+
+ITERATIONS: 3 build+validate cycles.
+- Build 1: check_pptx (sandbox) reported unit-mixing — title() returned EMU but inch-based helpers re-wrapped in IN(), producing absurd geometry (slides 23/24 + bogus footer y). Also eyebrow overlapped the fixed title-top. Fixed: title() returns inches; eyebrow -> overlay_eyebrow with 0.2in box.
+- Build 2: sandbox check_pptx ok=true. But finish_deck's validator returned 208 problems — it only recognizes the four canonical role prefixes, so my legacy panel_/nav_/caption_ aliases made every framed-box panel and its overlaid text count as overlapping content.
+- Fix: converted ALL shape names to canonical prefixes (panel_->background_, nav_->meta_, caption_->overlay_caption_, title_rule->meta_title_rule).
+- Build 3: sandbox check_pptx ok=true (with and without Pillow); re-ran finish_deck.
+
+FINAL: repo/out.pptx, 24 slides. Sandbox check_pptx ok=true (0 problems, no overflow finding).
+
+--- SANDBOX CONTEXT (added during cleanup, sandbox deleted) ---
+Sandbox: sandbox-ghp1/ — deck (out.pptx) lived only in the sandbox (out-ghp1/ had the log but no deck); rescued before deletion. GHP/Stop-TB, 24 slides. Console: ghp_run1.console.log.

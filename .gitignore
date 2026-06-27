@@ -10,15 +10,3 @@ wheels/
 .venv
 
 .env
-
-# Sandbox-agent run artifacts (pinned workspace + persisted decks)
-agent_workspace/sandbox/
-agent_workspace/out/
-agent_workspace/sandbox-*/
-agent_workspace/out-*/
-agent_workspace/final/
-# LibreOffice lock files
-~$*
-# Generated decks / build scripts written into the mounted repo at runtime
-agent_workspace/repo/*.pptx
-agent_workspace/repo/build_deck.py

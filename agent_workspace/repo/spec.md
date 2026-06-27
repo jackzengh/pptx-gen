@@ -1,185 +1,273 @@
-# Take-Two Interactive — Financial Overview (FY2021 & H1 FY2022)
+# The Economic Impact of Ford and the F-Series (BCG, September 2020)
 
 <!--
-Stage-1 content spec. Each slide is information-dense by design (modeled on a BCG-style
-deck): a takeaway-sentence title, a one-line chart subtitle where there's a visual, an
-annotated primary visual, a secondary column of explanatory stats/bullets, and a
-multi-line source + numbered footnotes. All figures are sourced from Take-Two's FY2021
-Form 10-K and Q2 FY2022 earnings release / 10-Q. Stage 2 should compose 3–5 blocks per
-slide, use stat cards and side-by-side columns, and keep titles as full sentences.
+Stage-1 content spec modeled on BCG's "Economic Impact of Ford and the F-Series"
+deck. Information-dense, BCG-style: action-title sentences, eyebrow labels, color
+sidebars, half-bleed images, annotated waterfall/bridge charts, comparison bars
+with relative-size multiplier rows, a 2x4 icon grid, and a full-bleed stat-equation
+hero. Stage 2 should compose these varied layouts (see skills/pptx/design.md
+"Layout patterns") and keep slides DENSE — fill the working area, minimal dead
+whitespace. All figures transcribed from the source deck; "~" denotes approximate.
+Palette: BCG green primary (#2E9E7B / a teal-green), dark slate ink, light grey
+content fields, white. Accent green for hero data points.
 -->
 
-## cover — cover — The Financial Story of Take-Two Interactive
-**Text:** Record fiscal 2021 results and the first half of fiscal 2022 — a publisher of owned, iconic franchises (Nasdaq: TTWO)
-**Subtitle:** Fiscal year ended March 31, 2021, and the six months ended September 30, 2021
+## cover — cover — The Economic Impact of Ford and the F-Series
+**Layout:** Color sidebar (left third, green) with white title; large hero truck image fills the right two-thirds.
+**Eyebrow:** (none)
+**Text:** September 2020
+**Footer (in sidebar):** Ford | BCG
+**Image note:** Ford F-150 on a rocky overlook. "Image: Ford."
 
-## context — content — Context for this overview
-_Source: Take-Two FY2021 Form 10-K; Q2 FY2022 earnings release & Form 10-Q._
-**Two-column layout. Left column — "What this covers":**
-**Bullets:**
-- This overview summarizes Take-Two's financial performance across revenue, profitability, revenue mix, and capital position.
-- It draws on three lenses: the multi-year growth trend, the FY2021 record year in detail, and the early-FY2022 trajectory.
-- All figures are as reported in SEC filings; net bookings is the company's key operational (non-GAAP) metric and is shown alongside GAAP net revenue.
-**Right column — "How Take-Two is built":**
-**Bullets:**
-- **Five publishing labels:** Rockstar Games, 2K, Private Division, Social Point, and Playdots.
-- **27 proprietary franchises**, internally owned across action, sports, strategy, and mobile genres.
-- **Grand Theft Auto** is the cornerstone IP — GTA V alone has sold in over 155 million units since launch.
-- **6,495 full-time employees** as of March 31, 2021, with 77% in product development.
+## context — content — Context for this document
+**Layout:** Color sidebar (left, green, faded landscape image behind) holding the content; large landscape image right.
+**Sub-header:** Summary of the study
+**Body:** BCG evaluated the importance of the F-Series and Ford to the US economy through the lenses of employment, GDP, and manufacturing impact, as well as through comparisons to other US products and companies.
+**Sub-header:** Approach
+**Body:** BCG evaluated the impact of the F-Series and Ford across four dimensions:
+**Numbered list:**
+1. Employment impact at a national and select regional levels
+2. Economic impact at a national and select regional levels
+3. Ford's current and historical US manufacturing presence
+4. Product usage illustrating how the F-Series and Ford support Americans
+_Source: BCG analysis._
 
-## kpis — data — Fiscal 2021 set company records across every headline metric
-_Source: FY2021 10-K, Consolidated Statements of Operations; FY2021 earnings release (Net Bookings)._
-**Stats (four hero cards):**
-| Metric | Value |
+## key-findings — content — Our study has uncovered several key economic and employment impacts of Ford and its F-Series production
+**Layout:** Emphasis sidebar (left, green, faded image) with the action title in white; right is a light field with three icon rows (icon-in-green-square + label + stat callouts), separated by a vertical rule.
+**Icon row 1 — Economic and employment impact:**
+- **13 to 14** US jobs are supported for each direct Ford F-Series employee¹
+- This equates to **~500,000** total jobs attributable to the F-Series
+- The F-Series contributes approximately **~$49 billion** to US GDP, including multiplier effects²
+- F-Series trucks are used by and support up to **13 million** Americans in their daily work
+**Icon row 2 — Manufacturing impact:** (icon greyed; detail on later slides)
+**Icon row 3 — Usage impact:** (icon greyed; detail on later slides)
+_Source: BCG analysis._
+_¹Includes dealership employment and impact on local communities._
+_²Multiplier effects include after-sales services and community GDP impact driven by employee respending._
+
+## summary-mfg-usage — content — Manufacturing leadership and unmatched usage reinforce the F-Series' impact
+**Layout:** Two icon columns side by side (each: icon-in-square + bold label, then a stacked list of short claims), vertical rule between.
+**Column 1 — Manufacturing impact:**
+- Ford assembled **2x** as many full-size pickups **in the US** as any competitor in 2019
+- Ford is the leading US auto manufacturer — responsible for **one in five** vehicles assembled **domestically**
+- Ford is a **leader** in automotive innovation in terms of **patent quality** and **recency**
+- The F-150 is the **most American-made** full-size pickup truck (based on an external study)
+**Column 2 — Usage impact:**
+- The F-Series is **among the most valuable consumer products** in the US
+- The F-Series is the **most popular vehicle** on the road in the US today…
+- …and the F-Series is the **highest-selling** vehicle in the US over the last **ten years**
+- The F-Series is the **best-selling pickup** truck in the world over the last **ten years**
+- The F-150 is the most popular vehicle on the road in **39 of 50 US** states
+- Ford is the **most popular** pickup truck in **75%** of commercial vocations
+_Source: BCG analysis._
+
+## contents — content — Contents of this report
+**Layout:** Full green background; row of four numbered image tiles (small green number square on each image corner) with captions below.
+**Tiles:**
+1. Employment impact
+2. GDP impact
+3. Manufacturing impact
+4. Usage impact
+**Image note:** "Images: Ford."
+
+## section-employment — section — Employment impact
+**Layout:** Color sidebar nav (left, green): section list with the current item white/bold, others greyed — Employment impact (active), GDP impact, Manufacturing impact, Usage impact. Large factory image right.
+**Image note:** "Image: Ford."
+
+## fseries-jobs — data — The F-Series supports ~500,000 American jobs, representing ~13–14 jobs for every direct Ford employee
+**Eyebrow:** F-SERIES
+**Layout:** Annotated waterfall (bridge) chart left two-thirds; supporting truck image right.
+**Y-axis:** US jobs attributable to the F-Series (thousands)
+**Waterfall (cumulative bars, in thousands):**
+| Step | Value |
 |---|---|
-| Net Revenue | $3,373M |
-| Net Income | $589M |
-| Diluted EPS | $5.09 |
-| Net Bookings | $3,553M |
-**Bullets (supporting context beneath the cards):**
-- Net revenue rose 9% year over year to a company record $3.37 billion.
-- Net income grew 46% to $589 million, the highest in company history.
-- Net bookings — the forward-looking demand metric — reached $3.55 billion, up 19%.
+| Direct | ~37 |
+| Suppliers | ~177 |
+| Community jobs (suppliers) | ~138–153 |
+| Dealers | ~73 |
+| Community jobs (dealer suppliers) | ~39–45 |
+| (dealer add) | ~16 |
+| Total | ~480–500 |
+**Brackets:** "Mfg & Corporate: Job creation — 9–10x manufacturing multiple"; "Dealers: Job creation"; "13–14x total multiple."
+**Example-jobs row (E.g.):** F-Series assembly line staff member, Ford engineer | F-Series supplier machinist, community nurse | Dealer sales staff, vehicle technician | Dealer's accountant, community teacher
+_Sources: Bureau of Labor Statistics (2019); F-Series supplier spending (2019); F-Series P&L (2019); F-Series plant-level costs and headcounts (2019); RIMS II ratios (2012 and 2017); Ford government relations (2019); public dealer reports; BCG analysis; image: Ford._
+_Note: Dealers attributable to F-Series sales are based on state-level F-Series sales volume. Jobs supported exclude any employment impact through truck usage or employment impact resulting from taxes paid._
 
-## revenue-trend — data — Net revenue has grown every year, up 26% over three years to a record $3.4B
-**Chart subtitle:** Net revenue, fiscal years ended March 31 ($M)
-_Source: FY2021 10-K (FY2019–FY2021 exact); stockanalysis.com (FY2017–FY2018). Note: net revenue is GAAP; differs from net bookings._
-**Chart (line):** Net revenue ($M)
-| Year | Net revenue |
+## ford-jobs — data — Ford USA supports ~1 million American jobs, representing ~11–12 jobs for every direct Ford employee
+**Eyebrow:** FORD
+**Layout:** Annotated waterfall left two-thirds; supporting plant image right.
+**Y-axis:** US jobs attributable to Ford USA (thousands)
+**Waterfall (thousands):**
+| Step | Value |
 |---|---|
-| FY2017 | 1780 |
-| FY2018 | 1793 |
-| FY2019 | 2668 |
-| FY2020 | 3089 |
-| FY2021 | 3373 |
-**Bullets (right-side "so what" column):**
-- Five straight years of top-line expansion, accelerating sharply from FY2019 onward.
-- FY2021's $3.37B is an all-time high, +9% over FY2020 and +26% over FY2019.
-- Growth has been driven by the shift to recurrent consumer spending (see next section).
+| Direct | ~87 |
+| Suppliers | ~338 |
+| Community jobs (suppliers) | ~271–304 |
+| Dealers | ~178 |
+| Community jobs (dealer suppliers) | ~98–118 |
+| (dealer add) | ~40 |
+| Total | ~1,010–1,060 |
+**Brackets:** "Mfg & Corporate: 8–9x manufacturing multiple"; "Dealers: Job creation"; "11–12x total multiple."
+**Example-jobs row:** Ford assembly line staff member, Ford engineer | Ford supplier machinist, community nurse | Dealer sales staff, vehicle technician | Dealer's accountant, community teacher
+_Sources: Bureau of Labor Statistics (2019); Ford US supplier spending (2019); Ford US P&L (2019); RIMS II ratios (2012 and 2017); Ford government relations (2019); public dealer reports; BCG analysis; image: Ford._
 
-## profitability — data — Margins expanded sharply: gross margin reached 54.5% and operating margin 18.7%
-**Chart subtitle:** Gross margin and operating margin, FY2019–FY2021 (% of net revenue)
-_Source: FY2021 10-K, Statements of Operations. Margins computed on GAAP net revenue._
-**Chart (column):** Margin (%) by year
-| Year | Gross margin | Operating margin |
+## section-gdp — section — GDP impact
+**Layout:** Color sidebar nav (GDP impact active); large assembly-line image right.
+**Image note:** "Image: Ford."
+
+## fseries-gdp — data — The F-Series contributes ~$49 billion to US GDP through production and multiplier effects
+**Eyebrow:** F-SERIES
+**Layout:** Annotated waterfall left two-thirds (emphasis green sidebar with the title on the left); category descriptions row below the axis.
+**Y-axis:** US GDP contribution of the F-Series ($billions)
+**Waterfall ($B):**
+| Step | Value |
+|---|---|
+| Direct | ~11 |
+| Suppliers | ~17 |
+| Dealers (Sales)¹ | ~3 |
+| Dealers (After-sales services)² | ~5 |
+| Community impact | ~13 |
+| Total | ~49 |
+**Brackets:** "Product GDP contribution: Manufacturing and sales ($31 billion)"; "Multiplier effect: After-sales and employee respending ($18 billion)."
+**Category descriptions:** Ford activities such as R&D, vehicle assembly | Supplier activities such as part manufacturing, professional services | Retail sale of F-Series trucks | Repairs, servicing, financing, and insurance on F-Series vehicles | Employee respending on community industries such as food, health care, etc.
+_Sources: Bureau of Labor Statistics (2019); F-Series supplier spending (2019); F-Series P&L (2019); F-Series plant-level costs and headcounts (2019); RIMS II ratios (2012 and 2017); Ford government relations (2019); public dealer reports; BCG analysis._
+_¹Based on vehicle sales accounting for approximately 35% of dealer gross profits. ²Does not include services and repairs by non-Ford dealers._
+
+## ford-gdp — data — Ford USA contributes ~$100 billion to US GDP through production and multiplier effects
+**Eyebrow:** FORD
+**Layout:** Annotated waterfall, full width; category descriptions row below.
+**Y-axis:** US GDP contribution of Ford USA ($billions)
+**Waterfall ($B):**
+| Step | Value |
+|---|---|
+| Direct | ~19 |
+| Suppliers | ~32 |
+| Dealers (Sales) | ~7 |
+| Dealers (After-sales services) | ~13 |
+| Community impact | ~29 |
+| Total | ~100 |
+**Brackets:** "Product GDP contribution: Manufacturing and sales ($58 billion)"; "Multiplier effect: After-sales and employee respending ($42 billion)."
+_Sources: Bureau of Labor Statistics (2019); Ford US supplier spending (2019); Ford US P&L (2019); RIMS II ratios (2012 and 2017); Ford government relations (2019); public dealer reports; BCG analysis._
+
+## section-manufacturing — section — Manufacturing impact
+**Layout:** Color sidebar nav (Manufacturing impact active); large truck image right.
+**Image note:** "Image: Ford."
+
+## mfg-2x — data — Ford assembled twice as many full-size pickups in the US as any competitor in 2019
+**Layout:** Line chart left two-thirds; supporting plant image right.
+**Chart subtitle:** Full-size pickup trucks assembled in the US (thousands)
+**Chart (line, 2010→2019):**
+| Maker | 2010 | 2019 |
 |---|---|---|
-| FY2019 | 42.9 | 7.7 |
-| FY2020 | 50.1 | 13.8 |
-| FY2021 | 54.5 | 18.7 |
-**Bullets (right column):**
-- Gross margin climbed nearly 12 points in two years as higher-margin digital and recurrent revenue grew.
-- Income from operations more than tripled, from $207M (FY2019) to $629M (FY2021).
-- Net income margin reached 17.5% in FY2021, up from 12.5% in FY2019.
+| Ford | 640 | 1,060 |
+| FCA | 430 | 490 |
+| GM | 420 | 480 |
+| Toyota | 175 | 130 |
+| Nissan | 30 | 30 |
+**Annotation:** Ford line in green, labeled with the Ford oval; a "2.1x" callout between Ford and the next competitor at 2019.
+_Sources: Based on IHS Markit CYE 2019 US Light Vehicle Production data (see IHS disclaimer); BCG analysis; image: Ford._
+_Note: GM pickup truck brands include Sierra and Silverado._
 
-## revenue-mix — data — Recurrent consumer spending became the majority of revenue, flipping the model
-**Chart subtitle:** Net revenue by type, FY2020 vs FY2021 ($M)
-_Source: FY2021 10-K, net revenue by type. RCS = recurrent consumer spending (in-game purchases, virtual currency, add-on content)._
-**Chart (column):** Revenue by type ($M)
-| Type | FY2020 | FY2021 |
-|---|---|---|
-| Recurrent consumer spending | 1385 | 2075 |
-| Full game and other | 1704 | 1298 |
-**Bullets (right column):**
-- RCS grew 50% year over year and became the majority of revenue for the first time.
-- RCS reached 62% of net revenue in FY2021 (and 63% of net bookings), up from 45% a year earlier.
-- The shift de-risks the model: revenue is increasingly recurring rather than tied to new-title launches.
-
-## channel-geo — comparison — Revenue is overwhelmingly digital and led by the U.S., with 40% from abroad
-_Source: FY2021 10-K, net revenue by distribution channel and by geography._
-**Left — Table (by channel):**
-| Channel | FY2021 ($M) | Share |
-|---|---|---|
-| Digital online | 2,919 | 86.6% |
-| Physical retail & other | 453 | 13.4% |
-**Right — Table (by geography):**
-| Geography | FY2020 ($M) | FY2021 ($M) | Growth |
-|---|---|---|---|
-| United States | 1,776 | 2,016 | +14% |
-| International | 1,313 | 1,357 | +3% |
-**Bullets (below the two tables):**
-- Digital delivery reached 86.6% of net revenue (87% of net bookings), up from 63% just two years earlier.
-- The U.S. drove growth at +14%; international held 40% of revenue, with Asia ~7% of net bookings — a stated expansion opportunity.
-
-## platform — data — Console anchors the business while PC and mobile broaden the base
-**Chart subtitle:** FY2021 net revenue by platform ($M)
-_Source: FY2021 10-K, net revenue by platform._
-**Chart (pie):** FY2021 revenue by platform ($M)
-| Platform | FY2021 |
+## mfg-one-in-five — data — Ford is responsible for one in five vehicles assembled in the US
+**Layout:** Image left; right holds a 100% stacked bar chart (2015–2019) AND a side table of 2019 volumes.
+**Chart subtitle:** % of US vehicle assembly
+**Stacked bars (% by maker, 2015→2019):** Ford 21/20/22/21/20 (green); GM 18/20/19/18/16; FCA 15/13/11/13/13; Toyota 11/11/12/11/11; Honda 11/11/11/11/11; Others 25/25/26/25/28 (darkest).
+**Side table — Vehicles assembled (2019, thousands):**
+| Maker | Vehicles |
 |---|---|
-| Console | 2517 |
-| PC and other | 856 |
-**Bullets (right column):**
-- Console delivered 75% of FY2021 net revenue, led by the GTA and NBA 2K franchises.
-- PC and other contributed $856M (25%), including a growing mobile and PC-digital base.
-- Grand Theft Auto products alone represented 29.2% of total net revenue.
+| Ford | 2,170 |
+| GM | 1,677 |
+| FCA | 1,420 |
+| Toyota | 1,195 |
+| Honda | 1,205 |
+| Others¹ | 2,926 |
+| **Total** | **10,593** |
+_Sources: Based on IHS Markit CYE 2019 US Light Vehicle Production data; BCG analysis; image: Ford._
+_¹Including BMW, Daimler, Geely, Hyundai, Karma, Mercedes-Benz, Navistar, Renault-Nissan-Mitsubishi, Kia, Tesla, Volkswagen._
 
-## balance-sheet — data — A fortress balance sheet: $2.7B in cash and investments funds the pipeline
-**Stats (four hero cards):**
-| Metric | Value |
-|---|---|
-| Cash & Equivalents | $1,423M |
-| Short-Term Investments | $1,309M |
-| Operating Cash Flow | $912M |
-| Stockholders' Equity | $3,332M |
-_Source: FY2021 10-K, Balance Sheet and Statement of Cash Flows._
-**Bullets (beneath the cards):**
-- Take-Two held $2.7 billion in cash and short-term investments at fiscal year-end, against modest liabilities.
-- Operating cash flow rose 33% to $912 million, funding development of the multi-year slate internally.
-- Total assets were $6.0 billion with $3.3 billion of stockholders' equity — ample capacity for content investment and M&A.
+## mfg-american-made — data — An external study confirms the F-150 is the most American-made full-size pickup
+**Layout:** Scatter chart left two-thirds; supporting truck image right.
+**Chart subtitle:** American University's 2019 Made in America Auto Index found that the F-150 is the most American-made full-size pickup
+**Scatter (Kogod Made in America Index¹ vs Vehicles sold 2019, thousands):** F-150 hero point at ~(560, 78) in green; competitors greyed — Canyon (110, 78), Colorado (120, 78), Ridgeline (30, 77), Tacoma (250, 71), Tundra (110, 70), Sierra 1500 (180, 68), Silverado 1500 (440, 68), Ram 1500 (430, 66), Titan (30, 59), Ranger (75, 61), Frontier (75, 52).
+**Annotation:** "The F-150 leads the industry both in number of vehicles sold and as the most American-made truck²" with an arrow to the F-150 point.
+_Sources: Made in America Auto Index (Kogod School of Business at American University); BCG analysis; image: Ford._
 
-## section-h1fy22 — section — Part Two: The first half of fiscal 2022
-**Text:** Investing through a transition year while recurrent spending deepens
+## mfg-patents — data — Ford is a leader in the automotive industry for combined quality and recency of patent filings
+**Layout:** Bubble scatter right two-thirds; supporting truck image left.
+**Chart subtitle:** Average Competitive Impact™ (patent economic value) vs Freshness % (2017)
+**Bubble scatter (x=Freshness %, y=Avg Competitive Impact, size=patent families):** Ford hero green bubble at ~(37, 1.8); Tesla (38, 2.7) small; FCA (35, 1.5); GM (35, 1.2) large; Honda (35, 0.8); Volkswagen (36, 0.7) large; Toyota (33, 0.7) large; Nissan (8, 0.7).
+**Annotation:** "Ford is a leader in the auto industry in both patent Competitive Impact and Freshness," arrow to Ford. Legend bubble: 10,000 patent families.
+_Sources: LexisNexis PatentSight; BCG Center for Growth & Innovation Analytics; image: Ford._
 
-## q2fy22 — data — Q2 FY2022 revenue held steady as the company invested for its largest-ever pipeline
-**Stats (four hero cards):**
-| Metric | Value |
-|---|---|
-| Q2 Net Revenue | $858M |
-| Q2 Operating Income | $20M |
-| Q2 Diluted EPS | $0.09 |
-| Q2 Net Bookings | $985M |
-_Source: Q2 FY2022 earnings release and Form 10-Q (quarter ended September 30, 2021)._
-**Bullets (beneath the cards):**
-- Net bookings grew 3% to $985M; recurrent consumer spending rose to 69% of net bookings.
-- Operating income was $20M (down from $115M a year earlier) as Take-Two stepped up investment in development.
-- Gross margin was 46.8%; the quarter reflects a deliberate build-up ahead of a record forward slate.
+## patents-industries — content — Ford's IP is supporting innovation across industries
+**Eyebrow:** ILLUSTRATIVE EXAMPLES
+**Layout:** Emphasis green sidebar (left) with title + a stat callout "~23,000 times cited across different industries"; right is a 2×4 icon grid with "Industry" / "Citing patent" row labels.
+**Sidebar body:** Ford patents are cited in innovative new products across industries, from agriculture to biopharma. From 2013 through 2017, Ford's patents were cited **~23,000** times across different industries.
+**Icon grid (Industry → Citing patent):**
+- Aircraft monitoring — Aircraft-operating-data monitor provides integrated view of asset health
+- Surgical robotics — System for controlling articulating arm as part of confidence-based robot-assisted surgery system
+- Exercise machine — Exercise program based on real-world routes, including video display and topographical simulation
+- Vision technology — Machine-learning program analyzes body language to improve interaction between humans and robots
+- Medtech devices — Medical treatment device and method for stimulating neurons of a patient
+- Health care / pharmacy — Controlled release of peptide formulations to deliver treatment solutions to administration devices
+- Audio technology — Voice-activated virtual assistant used to retrieve and deliver information using a wireless earpiece
+- Home automation — Detection and mitigation of harmful gases via integration with home automation systems
+_Sources: LexisNexis PatentSight; BCG Center for Growth & Innovation Analytics._
 
-## q2-mix — comparison — In Q2, digital and recurrent spending deepened across both geography and channel
-_Source: Q2 FY2022 earnings release (quarter ended September 30, 2021)._
-**Left — Table (by geography, net revenue):**
-| Geography | Q2 FY22 ($M) | Share |
+## section-usage — section — Usage impact
+**Layout:** Color sidebar nav (Usage impact active); large rural truck image right.
+**Image note:** "Image: Ford."
+
+## usage-equation — data — F-Series trucks are used by and support up to 13 million Americans in their daily work
+**Layout:** Full-bleed faded landscape image with a stat-equation hero (left two-thirds) and a light-grey supporting sidebar (right).
+**Equation:** ~17M¹ F-Series on the road  ×  26–35% estimated in commercial use  ×  2.1–2.4 average truck occupancy  =  **13M** Americans in their daily work  →  Representing approximately **8%** of the US labor force.
+**Operand captions:** Based on vehicle in operation data | Based on registration information, quantitative analysis, and expert interviews | Based on usage intensity estimates obtained via expert interviews.
+**Sidebar — Workers supported by the F-Series:** F-Series trucks support workers in their daily jobs across all major industries, including:
+- Construction workers
+- Farmers and ranchers
+- Independent contractors
+- Delivery service people
+- Emergency vehicle drivers
+_Sources: Expert interviews; BCG analysis._
+_¹16.6 million F-Series in operation based on IHS Markit Vehicles in Operation (VIO) in the US as of 4/1/20 (see IHS disclaimer)._
+
+## consumer-products — comparison — The F-Series is among the largest US consumer products — bigger than Android and combined major sports leagues
+**Layout:** Comparison bar chart (full width) on a faded road image; relative-size multiplier row beneath the axis.
+**Y-axis:** Revenue ($billions)
+**Bars (descending; Ford F-Series hero in green, rest grey):**
+| Product | Revenue ($B) | F-Series relative size |
 |---|---|---|
-| United States | 515 | 60% |
-| International | 343 | 40% |
-**Right — Table (by channel, net revenue):**
-| Channel | Q2 FY22 ($M) | Share |
+| iPhone (US)¹ | 55 | 0.8x |
+| Ford F-Series (US)² | 42 | — |
+| Android OS (US)³ | 36 | 1.2x |
+| Global Disney experiences⁴ | 32 | 1.3x |
+| US refrigerators⁵ | 19 | 2.2x |
+| Budweiser (AB InBev US) | 15 | 2.8x |
+| NFL | 15 | 2.8x |
+| MLB | 11 | 3.8x |
+| NBA | 9 | 4.7x |
+| NHL | 5 | 8.5x |
+**Bracket:** "Major sports leagues' combined revenue ~$40 billion" over NFL+MLB+NBA+NHL. Small F-Series truck image atop the hero bar.
+_Sources: Company financial statements; Google legal disclosures; Forbes; IDC; Euromonitor; Chicago Tribune; BCG analysis._
+
+## company-comparison — comparison — The F-Series alone generated more revenue than many recognizable companies in 2019
+**Layout:** Comparison bar chart (full width); relative-size multiplier row beneath.
+**Y-axis:** 2019 revenue ($billions)
+**Bars (Ford F-Series hero green, rest grey):**
+| Company | Revenue ($B) | F-Series relative size |
 |---|---|---|
-| Digital online | 779 | 91% |
-| Physical & other | 79 | 9% |
-**Bullets (below the tables):**
-- Digital reached 91% of quarterly net revenue (89% of net bookings) — the structural shift continues.
-- The U.S./international split held near 60/40, consistent with the full-year FY2021 mix.
-
-## mobile — data — Mobile net revenue nearly doubled, led by Social Point's live-service titles
-**Chart subtitle:** Mobile net revenue, Q2 FY2021 vs Q2 FY2022 ($M)
-_Source: Q2 FY2022 Form 10-Q. Mobile is reported within "PC and other."_
-**Chart (column):** Mobile net revenue ($M)
-| Quarter | Mobile net revenue |
-|---|---|
-| Q2 FY2021 | 61 |
-| Q2 FY2022 | 115 |
-**Bullets (right column):**
-- Mobile net revenue grew 89% year over year, the fastest-growing platform in the quarter.
-- Growth was led by Social Point's live-service mobile portfolio and continued in-game spending.
-- Mobile deepens the recurrent-revenue mix and broadens reach beyond console and PC.
-
-## quote — quote — "We are entering our strongest development pipeline ever."
-**Text:** — Strauss Zelnick, Chairman & CEO, on Take-Two's multi-year slate
-
-## closing — closing — A record year and a deliberate investment phase
-_Source: FY2021 10-K; Q2 FY2022 earnings release._
-**Bullets (takeaway summary):**
-- FY2021 delivered record revenue ($3.37B), net income ($589M), and margins, on a model now majority-recurrent.
-- The balance sheet — $2.7B in cash and investments, $912M operating cash flow — funds growth internally.
-- H1 FY2022 reflects deliberate investment ahead of the strongest pipeline in company history.
-**Text:** Take-Two Interactive Software, Inc. · Nasdaq: TTWO
+| Ford F-Series (US)¹ | 42 | — |
+| McDonald's (US)² | 40 | 1.0x |
+| Nike | 39 | 1.1x |
+| John Deere | 39 | 1.1x |
+| Coca-Cola | 37 | 1.1x |
+| Starbucks² | 31 | 1.4x |
+| Capital One | 28 | 1.5x |
+| Visa | 23 | 1.8x |
+| Tesla³ | 21 | 2.0x |
+| Netflix | 20 | 2.1x |
+| Uber | 14 | 3.0x |
+| Twitter | 3 | 12.2x |
+**Annotation:** Small F-Series truck image atop the hero bar.
+_Sources: Company financial statements; BCG analysis._
+_¹F-Series North American total sales of ~$49 billion. ²Includes franchise revenues. ³Excludes energy generation and storage and services segments._

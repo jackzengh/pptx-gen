@@ -1,0 +1,4 @@
+Take-Two Interactive financial overview (GPT-5.5, default model).
+Sandbox: sandbox-gpt/repo/ — task.md = Take-Two (14-slide TTWO spec).
+Two variants: ttwo_overview.pptx and ttwo_overview_v2.pptx (was gpt-2-ttwo_overview.pptx).
+(out-gpt/ also held agent_ford_100pct.pptx — a Ford deck, filed under gpt-5.5/ford-fseries/ford_100pct.pptx instead.)

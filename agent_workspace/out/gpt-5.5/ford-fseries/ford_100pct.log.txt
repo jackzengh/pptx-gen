@@ -1,0 +1,3 @@
+BCG Ford F-Series economic-impact deck (GPT-5.5, default model).
+NOTE: the file was saved as "ttwo_overview.pptx" in out-run/ but its content is the Ford deck — byte-identical (same MD5) to out-gpt/agent_ford_100pct.pptx.
+Sandbox: sandbox-run/repo/ — task.md = Ford F-Series. Scored 100% on /pptx-grader (per repo commit history).

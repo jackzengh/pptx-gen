@@ -10,35 +10,15 @@ AVG_ADVANCE_EM = 0.55
 POINTS_PER_INCH = 72
 EMU_PER_POINT = EMU_PER_INCH / POINTS_PER_INCH
 
-# We measure with bundled metric-compatible twins (Liberation*), but PowerPoint
-# renders with the user's real Arial/Calibri/etc. The twins track the originals
-# closely but not exactly, so a line measured at ~99% of the box can still wrap to
-# a new line under the real font. Treat only this fraction of the box as usable for
-# wrap decisions, so near-full lines round UP (the module's whole job: a blind model's
-# text must never overflow). 0.97 ⇒ a ~3% real-vs-twin drift can't cause an under-count.
 WRAP_FILL_FACTOR = 0.97
 
-# --------------------------------------------------------------------------- #
-# Bundled, metric-compatible fonts (see pptx_harness/fonts/).
-#
-# Generation always targets the default Office/web fonts (Arial, Calibri,
-# Helvetica, Times New Roman, Courier New). Rather than hunt the host's font
-# folders for those — slow, and absent on Linux/CI boxes — we ship open-source
-# twins whose glyph advance widths MATCH the originals exactly ("metric
-# compatible"): Liberation Sans/Serif/Mono. Measuring against them yields the
-# same line-wrap counts as the real fonts on every machine, with no os.walk.
-#
-# The output .pptx still references the real family name (e.g. "Arial"), so
-# PowerPoint renders with the user's installed font — we only change what the
-# harness *measures* with.
-# --------------------------------------------------------------------------- #
 FONTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 
-# Normalized family key (alnum-only, lowercased) -> bundled face stem.
+# basically a proxy for the real font files, we use Liberation fonts 
 _BUNDLED_FACES = {
     "arial": "LiberationSans",
     "helvetica": "LiberationSans",
-    "calibri": "LiberationSans",         # close enough metrically for wrap estimation
+    "calibri": "LiberationSans",        
     "liberationsans": "LiberationSans",
     "timesnewroman": "LiberationSerif",
     "times": "LiberationSerif",
@@ -52,7 +32,7 @@ _DEFAULT_FACE = "LiberationSans"
 
 
 def _bundled_font_path(font_family: str, bold: bool = False, italic: bool = False) -> str | None:
-    """Path to the bundled metric-compatible TTF for a requested family/style.
+    """Path to the bundled TTF (font file) for a requested family/style. this is how we approx text wrapping - using the ttf files! 
 
     Falls back to LiberationSans for any unknown family so the common Office/web
     fonts always resolve to a real file (no os.walk, no average-width guess).
@@ -92,9 +72,7 @@ def _load_resolved_font(
         if os.path.isfile(path):
             paths.append(path)
 
-    # 2. Bundled, metric-compatible twin of the requested family. Resolves the
-    #    common Office/web fonts (Arial/Calibri/Times/…) to a real file on every
-    #    machine — no host font scan, deterministic wrap counts.
+    # 2. Bundled, metric-compatible twin of the requested family. 
     bundled = _bundled_font_path(font_family, bold, italic)
     if bundled and bundled not in paths:
         paths.append(bundled)
@@ -127,12 +105,7 @@ def measure_text_emu(
     italic_items: list[bool] | None = None,
     item_widths: list[int] | None = None,
 ) -> tuple[int, int]:
-    """Return (width, height) in EMU for wrapped text content.
-
-    item_widths, if given, overrides the wrap width per paragraph i (used for bulleted
-    text, whose hanging indent narrows the column to width - marL). The returned width is
-    still the box width; only the line-wrap math uses the per-item value.
-    """
+    # Return (width, height) in EMU for text content - this is how we approx whether text will wrap or not
 
     space_after_emu = round(space_after_pt * EMU_PER_POINT)
     is_single = isinstance(text, str)
