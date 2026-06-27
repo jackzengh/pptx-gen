@@ -177,7 +177,7 @@ The #1 failure mode is an empty-looking slide. Fix it:
 - Body text left-aligned; center only short titles/labels if at all.
 - ≥0.4in from edges (hard fail inside 0.1in).
 - One dominant color (60–70%), 1–2 supporting tones, one sharp accent. Dark cover/section/closing, light content ("sandwich").
-- Every text frame via the `textbox()` helper (`auto_size = SHAPE_TO_FIT_TEXT`, zero margins). **Name every shape.**
+- Every text frame via the `textbox()` helper (zero margins). **Name every shape.**
 
 ---
 

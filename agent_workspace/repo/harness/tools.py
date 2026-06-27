@@ -108,14 +108,9 @@ def _grid_boxes(slide: "SlideInfo") -> list:
     return out
 
 # --- Text-overflow estimation constants -----------------------------------
-# A proportional glyph's average advance width is ~0.5-0.6 em. Titles here use
-# bold/serif faces that run wider, so 0.58 em is the calibrated value that makes
-# the line-count estimate match what PowerPoint actually renders (validated
-# against rendered slides). LINE_SPACING is the multiple of font size each line
-# occupies vertically (single-spaced text renders at ~1.2x its point size).
-CHAR_WIDTH_EM = 0.58
+# LINE_SPACING is the multiple of font size each line occupies vertically
+# (single-spaced text renders at ~1.2x its point size).
 LINE_SPACING = 1.2
-PT_PER_INCH = 72.0
 # Fallback point sizes when a run leaves its size unset (inherited from theme).
 DEFAULT_PT = {"title": 36.0, "body": 14.0, "text": 14.0}
 
@@ -248,18 +243,19 @@ def _text_metrics(shape):
         return paras, insets
     tf = shape.text_frame
     for p in tf.paragraphs:
-        size = None
-        bold = italic = False
-        name = None
+        size = p.font.size.pt if p.font.size is not None else None
+        bold = bool(p.font.bold)
+        italic = bool(p.font.italic)
+        name = p.font.name
+
         for run in p.runs:
             if run.font.size is not None:
                 size = run.font.size.pt
-            if run.font.bold:
-                bold = True
-            if run.font.italic:
-                italic = True
+            bold = bold or bool(run.font.bold)
+            italic = italic or bool(run.font.italic)
             if run.font.name:
                 name = run.font.name
+
         # (text, font_size_pt|None, bold, italic, font_name|None) — text and
         # style are needed for real-font wrap measurement (see text_metrics).
         paras.append((p.text, size, bold, italic, name))
@@ -300,6 +296,7 @@ def _walk(shape, title_shape, transforms, out: list[Box], notes: list[str]):
     for to_parent in reversed(transforms):
         left, top, width, height = to_parent(left, top, width, height)
 
+    has_text = getattr(shape, "has_text_frame", False) and shape.has_text_frame
     paras, insets = _text_metrics(shape)
     out.append(
         Box(
@@ -311,7 +308,7 @@ def _walk(shape, title_shape, transforms, out: list[Box], notes: list[str]):
             height=emu_to_in(height),
             text=(
                 shape.text_frame.text.strip()
-                if getattr(shape, "has_text_frame", False) and shape.has_text_frame
+                if has_text
                 else ""
             ),
             paras=paras,
@@ -346,28 +343,6 @@ def _problem(criterion, slide, message, shapes=None, boxes=None) -> dict:
 def _intersection_area(a: Box, b: Box) -> float:
     dx = min(a.right, b.right) - max(a.left, b.left)
     dy = min(a.bottom, b.bottom) - max(a.top, b.top)
-    if dx > 0 and dy > 0:
-        return dx * dy
-    return 0.0
-
-
-def _effective_bottom(b: Box) -> float:
-    """The box's real ink bottom: rendered text height for a text box (which may
-    be SHORTER than its declared box when auto_size grows the frame), else the
-    declared bottom. Two stacked auto-size text boxes whose declared boxes touch
-    but whose actual text doesn't should not count as overlapping.
-    """
-    if b.paras:
-        est = _estimated_text_height(b)
-        if est is not None:
-            return round(b.top + est, 3)
-    return b.bottom
-
-
-def _ink_intersection_area(a: Box, b: Box) -> float:
-    """Intersection using each box's effective (text-aware) bottom."""
-    dx = min(a.right, b.right) - max(a.left, b.left)
-    dy = min(_effective_bottom(a), _effective_bottom(b)) - max(a.top, b.top)
     if dx > 0 and dy > 0:
         return dx * dy
     return 0.0
@@ -419,9 +394,7 @@ def check_no_overlap(ctx: DeckContext) -> list[dict]:
     for s in ctx.slides:
         plots = [b for b in s.boxes if _has_role(b.name, _PLOT_PREFIXES)]
         for a, b in combinations(s.boxes, 2):
-            # Use text-aware (rendered) bounds so two stacked auto-size text
-            # boxes aren't flagged just because their declared boxes touch.
-            area = _ink_intersection_area(a, b)
+            area = _intersection_area(a, b)
             if area <= 0:
                 continue
             # Intentional overlaps in BCG-style layouts:

@@ -2,10 +2,11 @@
 
 How to build a `.pptx` from scratch with **python-pptx** (`pip install python-pptx`, import name `pptx`). This is the python equivalent of the pptxgenjs guide, mapped to the verified python-pptx API.
 
-Two rules run through everything here (see [SKILL.md](SKILL.md) and [naming.md](naming.md)):
+One rule runs through everything here (see [SKILL.md](SKILL.md) and [naming.md](naming.md)):
 
-1. **Every text frame gets `tf.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT`.** This makes the box grow to fit its text when PowerPoint/LibreOffice renders it, so content isn't clipped. Note: this is an authoring best practice — it does **not** make `check_pptx` see in-box overflow (the validator reads stored geometry, which `auto_size` doesn't change). Catch overflow with a visual render, not `check_pptx`.
-2. **Every shape gets a meaningful `shape.name`.** `check_pptx` echoes names in every problem it reports, so good names make failures self-explaining.
+1. **Every shape gets a meaningful `shape.name`.** `check_pptx` echoes names in every problem it reports, so good names make failures self-explaining.
+
+> `auto_size` (`SHAPE_TO_FIT_TEXT`) does **not** make `check_pptx` see in-box overflow — the validator reads stored geometry, which the autofit flag doesn't change. Don't rely on it; size boxes generously and catch overflow with the estimated check or a visual render.
 
 ---
 
@@ -47,14 +48,13 @@ prs.save("deck.pptx")
 ## Text & Formatting
 
 ```python
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR, MSO_AUTO_SIZE
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 
 box = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(4), Inches(1.2))
 box.name = "title"                                   # always name it
 tf = box.text_frame
 
 tf.word_wrap = True
-tf.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT       # rule 1: avoid clipping at render time
 tf.vertical_anchor = MSO_ANCHOR.MIDDLE               # TOP / MIDDLE / BOTTOM
 
 # Paragraph 0 already exists
@@ -75,7 +75,6 @@ r2.text = "Fiscal year 2025"
 r2.font.size = Pt(16)
 ```
 
-- `from pptx.enum.text import MSO_AUTO_SIZE` — members: `NONE`, `SHAPE_TO_FIT_TEXT`, `TEXT_TO_FIT_SHAPE`.
 - `tf.text = "..."` is a shortcut that replaces all content with a single paragraph/run.
 - **Internal margins**: text frames have padding by default. To align text precisely with shapes/lines at the same x, zero it out:
 
@@ -110,7 +109,7 @@ Build every textbox, bulleted paragraph, rectangle, and connector through these 
 ```python
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN, MSO_AUTO_SIZE
+from pptx.enum.text import PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Emu, Pt
 
@@ -167,7 +166,6 @@ def textbox(slide, left: int, top: int, width: int, height: int, *, name: str):
     tb.name = name
     tf = tb.text_frame
     tf.word_wrap = True
-    tf.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT   # required by the skill
     tf.margin_left = tf.margin_right = Pt(0)
     tf.margin_top = tf.margin_bottom = Pt(0)
     return tb, tf
@@ -337,7 +335,7 @@ paragraph(tf, "Became the majority of revenue.", 13, MUTED, bullet=True, level=1
 paragraph(tf, "Up from 45% a year earlier.", 13, MUTED, bullet=True, level=1)
 ```
 
-> **auto_size note:** `textbox()` sets `tf.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT` per the skill. This makes the box grow to fit its text when rendered, so content isn't clipped. It does **not** change the stored geometry `check_pptx` reads — so still pass a generous `height` and verify overflow with a visual render (see [SKILL.md](SKILL.md)).
+> **sizing note:** `check_pptx` reads only the stored `height` you pass to `textbox()` — there is no autofit reflow it can see. So pass a **generous** `height`, and verify overflow with the estimated check or a visual render (see [SKILL.md](SKILL.md)).
 
 ---
 
@@ -490,7 +488,6 @@ Common `XL_CHART_TYPE`: `COLUMN_CLUSTERED`, `BAR_CLUSTERED`, `LINE`, `LINE_MARKE
 ```python
 cap = slide.shapes.add_textbox(Inches(1), Inches(1.5), Inches(6), Inches(0.5))
 cap.name = "caption_chart_revenue"
-cap.text_frame.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT
 cap.text_frame.text = "Revenue by quarter ($M)"
 # cap bottom ≈ 1.5 + 0.5 = 2.0in, chart top = 2.1in → within 0.1in ✓
 ```
@@ -514,7 +511,7 @@ These cause bugs, corruption, or silent `check_pptx` failures.
 
 1. **Colors are `RGBColor(0xRR, 0xGG, 0xBB)`** — never a `"#hex"` string.
 2. **Positions/sizes need `Length` objects** (`Inches`/`Pt`/`Emu`), never bare floats.
-3. **Always set `tf.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT`** — so text isn't clipped when rendered. (It does not make overflow visible to `check_pptx`; size boxes generously and catch overflow with a visual render.)
+3. **Don't rely on `auto_size` for fit** — the autofit flag doesn't change stored geometry, so `check_pptx` can't see in-box overflow from it. Size boxes generously and catch overflow with the estimated check or a visual render.
 4. **Always set `shape.name`** — unnamed shapes report as `'shape'`, making problems unreadable.
 5. **Lines are connectors**, not `add_shape` — use `add_connector(MSO_CONNECTOR.STRAIGHT, ...)`.
 6. **Four features need XML workarounds**: transparency/alpha, gradients, true bullet glyphs in plain textboxes, and reading an inherited background. For full-bleed color use the public `slide.background.fill` instead.

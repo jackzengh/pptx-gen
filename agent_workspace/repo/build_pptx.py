@@ -5,7 +5,6 @@ Self-contained reference for the `pptx` skill. Every element is created through
 the inlined helpers (textbox / paragraph / rectangle / connector / title / chart
 / table) so the whole deck satisfies check_pptx and the design rules:
   - action-title sentences, each with an accent connector beneath (title())
-  - auto_size=SHAPE_TO_FIT_TEXT on every text frame (textbox())
   - real p.level bullets with hanging indent (paragraph(bullet=True))
   - charts never show the default "Chart Title" (chart())
   - readable tables (table())
@@ -17,7 +16,7 @@ Run from inside repo/ (title() imports harness.text_metrics):
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR, MSO_AUTO_SIZE
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION
 from pptx.chart.data import CategoryChartData
 from pptx.oxml.ns import qn
@@ -67,7 +66,6 @@ def textbox(slide, left, top, width, height, *, name):
     tb.name = name
     tf = tb.text_frame
     tf.word_wrap = True
-    tf.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT
     tf.margin_left = tf.margin_right = Pt(0)
     tf.margin_top = tf.margin_bottom = Pt(0)
     return tb, tf
