@@ -15,16 +15,16 @@ from .utils import (
     y_offset_variation,
 )
 
-# Per-line vertical pitch (single-spaced ≈ 1.2x point size) and fallback point
-# sizes per kind, for the text-overflow height estimate.
+# Per-line vertical pitch (single-spaced ≈ 1.2x point size) for the text-overflow height estimate.
 LINE_SPACING = 1.2
+
+# Default point sizes per kind, in case we can't get them from the shape (like if its set by the parent or the slide)
 DEFAULT_PT = {"title": 36.0, "body": 14.0, "text": 14.0}
 
 
 def check_outer_margin_frame(ctx: DeckContext) -> list[dict]:
     # every shape must stay inside a 0.3in frame on all 4 edges, except
-    # background panels/images which are meant to bleed to the edge.
-    # off-slide and in-the-margin are reported separately — different fixes.
+    # background panels/images which are meant to bleed to the edge. We use role_of to check if the shape is a background! 
     out = []
     for s in ctx.slides:
         for b in s.boxes:
@@ -59,10 +59,7 @@ def check_outer_margin_frame(ctx: DeckContext) -> list[dict]:
 
 
 def check_no_overlap(ctx: DeckContext) -> list[dict]:
-    # no two shapes' ink may collide, but some overlaps are intentional.
-    # which shapes are exempt? background/overlay on either side (content sits
-    # on a panel), chartpart on both sides (a chart's own pieces overlap).
-    # meta/chrome gets no exemption.
+    # no two shapes' should collide, but some overlaps are intentional (like backgrounds!). We exclude those using 'roles' which we use the role_of function to check.
     out = []
     for s in ctx.slides:
         for a, b in combinations(s.boxes, 2):
@@ -86,10 +83,7 @@ def check_no_overlap(ctx: DeckContext) -> list[dict]:
 
 
 def check_left_margin_consistency(ctx: DeckContext) -> list[dict]:
-    # content should hang off one shared left edge, per slide and deck-wide.
-    # per slide: flag >2 distinct block lefts (peer columns collapse to the
-    # row's single leftmost edge, so a real 3-col layout reads as one margin).
-    # deck-wide: flag when 2+ slides deviate from the deck's dominant left.
+    # content should hang off one shared left edge, per slide and deck-wide. so basic left margin consistency 
     out = []
 
     slide_lefts = {}
@@ -133,8 +127,6 @@ def check_left_margin_consistency(ctx: DeckContext) -> list[dict]:
 
 def check_edge_and_grid_alignment(ctx: DeckContext) -> list[dict]:
     # peer boxes in a row must share a width and a top (a clean grid band).
-    # unequal widths and non-aligned tops are flagged separately so the fix
-    # (equalize widths vs. align tops) is obvious.
     out = []
     for s in ctx.slides:
         for row in alignment_peer_clusters(grid_boxes(s), "top", "height"):
